@@ -1,5 +1,5 @@
-# Use Node.js for development
-FROM node:18-alpine
+# Build stage
+FROM node:18-alpine AS build
 
 WORKDIR /app
 
@@ -12,8 +12,20 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Expose port 3000 (as configured in vite.config.ts)
-EXPOSE 3000
+# Build the app
+RUN npm run build
 
-# Start the development server
-CMD ["npm", "run", "dev"]
+# Production stage
+FROM nginx:alpine
+
+# Copy built app from build stage
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copy custom nginx config if needed (optional)
+# COPY nginx.conf /etc/nginx/nginx.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
