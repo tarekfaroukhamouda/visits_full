@@ -15,7 +15,27 @@ import { DataProvider } from './contexts/DataContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { Toaster } from './components/ui/sonner';
 import { Users, Calendar, FileText, Home, Building2, BarChart3, Layers, Palmtree, RefreshCw, History, FileUp } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { doctorApi } from './services/api';
+
+// Helper function to decode JWT payload
+const decodeJWT = (token: string) => {
+  try {
+    const payload = token.split('.')[1];
+    const decoded = JSON.parse(atob(payload));
+    return decoded;
+  } catch (error) {
+    console.error('Error decoding JWT:', error);
+    return null;
+  }
+};
+
+// Helper function to check if token is expired
+const isTokenExpired = (token: string): boolean => {
+  const decoded = decodeJWT(token);
+  if (!decoded || !decoded.exp) return true;
+  return Date.now() >= decoded.exp * 1000;
+};
 
 export interface User {
   id: string;
@@ -71,6 +91,7 @@ export interface Facility {
   name: string;
   type: 'government' | 'private';
   location: 'inside-taif' | 'outside-taif';
+  email?: string;
 }
 
 export interface Program {
@@ -111,10 +132,64 @@ export interface Visit {
 type ViewType = 'dashboard' | 'visits' | 'add-visit' | 'employees' | 'facilities' | 'performance' | 'programs' | 'vacations' | 'swap-requests' | 'employee-history' | 'excel-upload';
 
 function AppContent() {
+  console.log('AppContent component rendering');
   const { t, dir } = useLanguage();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = () => {
+      try {
+        // Get token from cookie
+        const cookies = document.cookie.split(';');
+        let token = null;
+        for (let cookie of cookies) {
+          const [name, value] = cookie.trim().split('=');
+          if (name === 'auth_token') {
+            try {
+              token = decodeURIComponent(value);
+            } catch (error) {
+              console.error('Error decoding cookie value:', error);
+              // Clear malformed cookie
+              document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            }
+            break;
+          }
+        }
+
+        // Get user info from localStorage
+        const userInfo = localStorage.getItem('user_info');
+        let user = null;
+        if (userInfo) {
+          try {
+            user = JSON.parse(userInfo);
+          } catch (error) {
+            console.error('Error parsing user info:', error);
+            localStorage.removeItem('user_info');
+          }
+        }
+
+        if (token && user && !isTokenExpired(token)) {
+          setCurrentUser(user);
+        } else {
+          // Clean up invalid data
+          if (token) {
+            document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          }
+          if (user) {
+            localStorage.removeItem('user_info');
+          }
+        }
+      } catch (error) {
+        console.error('Error in checkAuth:', error);
+        // Clean up on error
+        document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        localStorage.removeItem('user_info');
+      }
+    };
+    checkAuth();
+  }, []);
 
   if (!currentUser) {
     return <LoginScreen onLogin={setCurrentUser} />;
@@ -123,7 +198,13 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-gray-50" dir={dir}>
       <Toaster position="top-center" />
-      <Header user={currentUser} onLogout={() => setCurrentUser(null)} />
+      <Header user={currentUser} onLogout={() => {
+        // Clear token cookie
+        document.cookie = 'auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        // Clear user info
+        localStorage.removeItem('user_info');
+        setCurrentUser(null);
+      }} />
       
       <div className="flex">
         {/* Mobile Sidebar Overlay */}
@@ -346,6 +427,7 @@ function AppContent() {
 }
 
 export default function App() {
+  console.log('App component rendering');
   return (
     <DataProvider>
       <LanguageProvider>

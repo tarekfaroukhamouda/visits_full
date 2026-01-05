@@ -3,7 +3,7 @@ import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Save, Plus, X, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
-import { checkMultipleEmployeesAvailability } from '../utils/conflictChecker';
+import { checkMultipleEmployeesAvailability, getAvailableEmployees } from '../utils/conflictChecker';
 import { FileUpload } from './FileUpload';
 
 export function AddVisitForm() {
@@ -318,22 +318,21 @@ export function AddVisitForm() {
           <h3 className="text-gray-900 pb-2 border-b border-gray-200">{t('assigned_employees')}</h3>
           
           <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-4">
-            {employees.map(employee => {
-              const conflict = employeeConflicts.get(employee.id);
-              const hasConflict = conflict?.hasConflict;
+            {(employees && employees.length > 0 ? getAvailableEmployees(formData.scheduledDate, visits, employees) : []).map(employee => {
+              const isSelected = formData.assignedEmployees.includes(employee.id);
 
               return (
                 <label
                   key={employee.id}
                   className={`flex items-center gap-3 p-3 rounded cursor-pointer transition-colors ${
-                    hasConflict 
-                      ? 'bg-red-50 border-2 border-red-200' 
+                    isSelected 
+                      ? 'bg-blue-50 border-2 border-blue-200' 
                       : 'hover:bg-gray-50'
                   }`}
                 >
                   <input
                     type="checkbox"
-                    checked={formData.assignedEmployees.includes(employee.id)}
+                    checked={isSelected}
                     onChange={(e) => {
                       if (e.target.checked) {
                         setFormData({
@@ -352,20 +351,13 @@ export function AddVisitForm() {
                   <div className="flex-1">
                     <p className="text-gray-900">{employee.name}</p>
                     <p className="text-sm text-gray-600">{employee.role}</p>
-                    {hasConflict && (
-                      <div className="flex items-center gap-2 mt-1 text-xs text-red-600">
-                        <AlertTriangle className="w-3 h-3" />
-                        <span>
-                          {conflict.conflictType === 'vacation' 
-                            ? t('employee_on_vacation')
-                            : t('employee_has_conflict')}
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </label>
               );
             })}
+            {(!employees || employees.length === 0) && (
+              <p className="text-gray-500 text-center py-4">Loading employees...</p>
+            )}
           </div>
           {formData.assignedEmployees.length > 0 && (
             <p className="text-sm text-gray-600">

@@ -18,6 +18,102 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+const EmployeeModalContent = ({ isEdit, formData, onChange, onSubmit, onClose }: {
+  isEdit: boolean;
+  formData: { name: string; role: string; email: string; phone: string };
+  onChange: (field: keyof typeof formData, e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onClose: () => void;
+}) => (
+  <div className="bg-white rounded-lg max-w-md w-full p-6 relative z-50" onClick={(e) => e.stopPropagation()}>
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-gray-900">{isEdit ? 'تعديل موظف' : 'إضافة موظف جديد'}</h3>
+      <button
+        onClick={onClose}
+        className="p-1 hover:bg-gray-100 rounded"
+      >
+        <X className="w-5 h-5" />
+      </button>
+    </div>
+    
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div>
+        <label className="block text-gray-700 mb-2">
+          الاسم الكامل <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={formData.name}
+          onChange={(e) => onChange('name', e)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="مثال: د. محمد العتيبي"
+          required
+          autoFocus
+        />
+      </div>
+
+      <div>
+        <label className="block text-gray-700 mb-2">
+          الوظيفة <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={formData.role}
+          onChange={(e) => onChange('role', e)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="مثال: أخصائي مكافحة العدوى"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-gray-700 mb-2">
+          البريد الإلكتروني <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={formData.email}
+          onChange={(e) => onChange('email', e)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="example@health.gov.sa"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-gray-700 mb-2">
+          رقم الهاتف <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={formData.phone}
+          onChange={(e) => onChange('phone', e)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="05xxxxxxxx"
+          required
+        />
+      </div>
+
+      <div className="flex items-center gap-3 pt-4">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex-1 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          إلغاء
+        </button>
+        <button
+          type="submit"
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#1565C0] text-white rounded-lg hover:bg-[#0d47a1] transition-colors"
+        >
+          <Save className="w-4 h-4" />
+          <span>حفظ</span>
+        </button>
+      </div>
+    </form>
+  </div>
+);
+
 export function EmployeesManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -106,119 +202,8 @@ export function EmployeesManagement() {
     setFormData({ name: '', role: '', email: '', phone: '' });
   }, [editingEmployee]);
 
-  const EmployeeModalContent = ({ isEdit, formData, onNameChange, onRoleChange, onEmailChange, onPhoneChange, onSubmit, onClose }: {
-    isEdit: boolean;
-    formData: { name: string; role: string; email: string; phone: string };
-    onNameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onRoleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onPhoneChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onSubmit: (e: React.FormEvent) => void;
-    onClose: () => void;
-  }) => (
-    <div className="bg-white rounded-lg max-w-md w-full p-6 relative z-50" onClick={(e) => e.stopPropagation()}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-gray-900">{isEdit ? 'تعديل موظف' : 'إضافة موظف جديد'}</h3>
-        <button
-          onClick={onClose}
-          className="p-1 hover:bg-gray-100 rounded"
-        >
-          <X className="w-5 h-5" />
-        </button>
-      </div>
-      
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div>
-          <label className="block text-gray-700 mb-2">
-            الاسم الكامل <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={onNameChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="مثال: د. محمد العتيبي"
-            required
-            autoFocus
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-700 mb-2">
-            الوظيفة <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.role}
-            onChange={onRoleChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="مثال: أخصائي مكافحة العدوى"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-700 mb-2">
-            البريد الإلكتروني <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.email}
-            onChange={onEmailChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="example@health.gov.sa"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-700 mb-2">
-            رقم الهاتف <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.phone}
-            onChange={onPhoneChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="05xxxxxxxx"
-            required
-          />
-        </div>
-
-        <div className="flex items-center gap-3 pt-4">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            إلغاء
-          </button>
-          <button
-            type="submit"
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-[#1565C0] text-white rounded-lg hover:bg-[#0d47a1] transition-colors"
-          >
-            <Save className="w-4 h-4" />
-            <span>حفظ</span>
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, name: e.target.value }));
-  };
-
-  const handleRoleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, role: e.target.value }));
-  };
-
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, email: e.target.value }));
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, phone: e.target.value }));
+  const handleChange = (field: keyof typeof formData, e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, [field]: e.target.value }));
   };
 
   return (
@@ -354,10 +339,7 @@ export function EmployeesManagement() {
           <EmployeeModalContent
             isEdit={!!editingEmployee}
             formData={formData}
-            onNameChange={handleNameChange}
-            onRoleChange={handleRoleChange}
-            onEmailChange={handleEmailChange}
-            onPhoneChange={handlePhoneChange}
+            onChange={handleChange}
             onSubmit={editingEmployee ? handleUpdateEmployee : handleAddEmployee}
             onClose={handleCloseModal}
           />

@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://138.68.225.253:8000';
 
 // Types
 export interface ApiResponse<T> {
@@ -7,9 +7,16 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
-// Helper function to get auth token
+// Helper function to get auth token from cookie
 const getAuthToken = (): string | null => {
-  return localStorage.getItem('auth_token');
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'auth_token') {
+      return decodeURIComponent(value);
+    }
+  }
+  return null;
 };
 
 // Helper function to get headers
@@ -188,7 +195,7 @@ export const transformEmployee = (backendDoctor: any): any => {
     role: backendDoctor.position || '',
     email: backendDoctor.email || '',
     phone: backendDoctor.phone_number || '',
-    isActive: true,
+    isActive: true, // Assuming all doctors are active
   };
 };
 
@@ -198,6 +205,7 @@ export const transformFacility = (backendLocation: any): any => {
     name: backendLocation.name || '',
     type: backendLocation.type || 'government',
     location: backendLocation.inside ? 'inside-taif' : 'outside-taif',
+    email: backendLocation.email || undefined,
   };
 };
 

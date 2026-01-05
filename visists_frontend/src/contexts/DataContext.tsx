@@ -49,6 +49,7 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: ReactNode }) {
+  console.log('DataProvider rendering');
   const [visits, setVisits] = useState<Visit[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -208,6 +209,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         name: facility.name,
         type: facility.type,
         inside: facility.location === 'inside-taif',
+        email: facility.email || null,
       };
 
       const newFacility = await locationApi.create(backendData);
@@ -226,6 +228,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (updatedFacility.name) backendData.name = updatedFacility.name;
       if (updatedFacility.type) backendData.type = updatedFacility.type;
       if (updatedFacility.location) backendData.inside = updatedFacility.location === 'inside-taif';
+      if (updatedFacility.email !== undefined) backendData.email = updatedFacility.email;
 
       const updated = await locationApi.update(parseInt(id), backendData);
       const transformed = transformFacility(updated);
@@ -377,12 +380,18 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const updated = await swapRequestApi.update(parseInt(id), backendData);
       const transformed = transformSwapRequest(updated);
       setSwapRequests(prev => prev.map(sr => sr.id === id ? transformed : sr));
+      
+      // If the swap request was approved, refresh visits data to reflect the assignment change
+      if (updatedSwapRequest.status === 'approved') {
+        await loadData();
+      }
+      
       toast.success('Swap request updated successfully');
     } catch (err: any) {
       toast.error(err.message || 'Failed to update swap request');
       throw err;
     }
-  }, []);
+  }, [loadData]);
 
   const deleteSwapRequest = useCallback(async (id: string) => {
     try {

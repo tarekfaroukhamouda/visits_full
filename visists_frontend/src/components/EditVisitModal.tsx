@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Visit } from '../App';
 import { useData } from '../contexts/DataContext';
-import { X, Save, Plus, Trash2 } from 'lucide-react';
+import { X, Save, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
+import { checkEmployeeAvailability } from '../utils/conflictChecker';
 
 interface EditVisitModalProps {
   visit: Visit;
@@ -10,7 +11,7 @@ interface EditVisitModalProps {
 }
 
 export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
-  const { updateVisit, employees } = useData();
+  const { updateVisit, employees, visits } = useData();
   
   const [formData, setFormData] = useState({
     name: visit.name,
@@ -32,6 +33,30 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
       notes: ''
     }
   });
+
+  const [employeeConflicts, setEmployeeConflicts] = useState<Map<string, any>>(new Map());
+
+  // Check for conflicts whenever date changes
+  useEffect(() => {
+    if (formData.scheduledDate) {
+      const conflicts = new Map<string, any>();
+      
+      employees.forEach(employee => {
+        const conflict = checkEmployeeAvailability(
+          employee.id,
+          formData.scheduledDate,
+          visits,
+          employees,
+          visit.id // Exclude current visit
+        );
+        conflicts.set(employee.id, conflict);
+      });
+      
+      setEmployeeConflicts(conflicts);
+    } else {
+      setEmployeeConflicts(new Map());
+    }
+  }, [formData.scheduledDate, visits, employees, visit.id]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,32 +242,61 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
             <h3 className="text-gray-900 pb-2 border-b border-gray-200">الموظفين المكلفين</h3>
             
             <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-4">
-              {employees.map(employee => (
-                <label key={employee.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.assignedEmployees.includes(employee.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setFormData({
-                          ...formData,
-                          assignedEmployees: [...formData.assignedEmployees, employee.id]
-                        });
-                      } else {
-                        setFormData({
-                          ...formData,
-                          assignedEmployees: formData.assignedEmployees.filter(id => id !== employee.id)
-                        });
-                      }
-                    }}
-                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                  <div className="flex-1">
-                    <p className="text-gray-900">{employee.name}</p>
-                    <p className="text-sm text-gray-600">{employee.role}</p>
-                  </div>
-                </label>
-              ))}
+              {employees && employees.length > 0 ? employees.map(employee => {
+                const conflict = employeeConflicts.get(employee.id);
+                const hasConflict = conflict?.hasConflict;
+                const isCurrentlyAssigned = formData.assignedEmployees.includes(employee.id);
+                const isDisabled = hasConflict && !isCurrentlyAssigned;
+
+                return (
+                  <label 
+                    key={employee.id} 
+                    className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
+                      hasConflict && !isCurrentlyAssigned
+                        ? 'bg-red-50 border-2 border-red-200 opacity-60' 
+                        : isCurrentlyAssigned
+                        ? 'bg-blue-50 border-2 border-blue-200'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isCurrentlyAssigned}
+                      disabled={isDisabled}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData({
+                            ...formData,
+                            assignedEmployees: [...formData.assignedEmployees, employee.id]
+                          });
+                        } else {
+                          setFormData({
+                            ...formData,
+                            assignedEmployees: formData.assignedEmployees.filter(id => id !== employee.id)
+                          });
+                        }
+                      }}
+                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                    />
+                    <div className="flex-1">
+                      <p className="text-gray-900">{employee.name}</p>
+                      <p className="text-sm text-gray-600">{employee.role}</p>
+                      {hasConflict && !isCurrentlyAssigned && (
+                        <div className="flex items-center gap-2 mt-1 text-xs text-red-600">
+                          <AlertTriangle className="w-3 h-3" />
+                          <span>
+                            {conflict.conflictType === 'vacation' 
+                              ? 'الموظف في إجازة'
+                              : 'الموظف لديه زيارة أخرى'}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                );
+              }) : (
+                <p className="text-gray-500 text-center py-4">Loading employees...</p>
+              )}
             </div>
           </div>
 

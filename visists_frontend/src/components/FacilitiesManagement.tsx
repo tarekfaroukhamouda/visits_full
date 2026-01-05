@@ -15,7 +15,8 @@ export function FacilitiesManagement() {
   const [formData, setFormData] = useState<Omit<Facility, 'id'>>({
     name: '',
     type: 'government',
-    location: 'inside-taif'
+    location: 'inside-taif',
+    email: ''
   });
 
   const filteredFacilities = facilities.filter(facility =>
@@ -52,7 +53,8 @@ export function FacilitiesManagement() {
     setFormData({
       name: facility.name,
       type: facility.type,
-      location: facility.location
+      location: facility.location,
+      email: facility.email || ''
     });
     setShowAddModal(true);
   };
@@ -68,7 +70,8 @@ export function FacilitiesManagement() {
     setFormData({
       name: '',
       type: 'government',
-      location: 'inside-taif'
+      location: 'inside-taif',
+      email: ''
     });
     setEditingFacility(null);
     setShowAddModal(false);
@@ -224,6 +227,19 @@ export function FacilitiesManagement() {
                   <option value="inside-taif">{t('inside_taif')}</option>
                   <option value="outside-taif">{t('outside_taif')}</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  {t('email')}
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={t('email_placeholder') || 'facility@example.com'}
+                />
               </div>
 
               <div className="flex items-center gap-3 pt-4">

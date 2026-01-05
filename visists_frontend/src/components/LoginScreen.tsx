@@ -25,19 +25,21 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     try {
       const response = await doctorApi.login(username, password);
       
-      // Store token
+      // Store token in cookie (expires in 8 hours like the token)
       if (response.token) {
-        localStorage.setItem('auth_token', response.token);
+        const expiryDate = new Date();
+        expiryDate.setTime(expiryDate.getTime() + (8 * 60 * 60 * 1000)); // 8 hours
+        document.cookie = `auth_token=${encodeURIComponent(response.token)}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Strict`;
       }
 
-      // Create user object
-      // Backend: role 0 = admin, role 1 = manager/regular user
+      // Store user info in localStorage
       const user: User = {
         id: response.name || username,
         name: response.name || username,
         role: response.role ?? 1, // Default to 1 (manager) if role is not provided
         email: response.email || username,
       };
+      localStorage.setItem('user_info', JSON.stringify(user));
 
       console.log('Login response:', response);
       console.log('User role:', user.role);
