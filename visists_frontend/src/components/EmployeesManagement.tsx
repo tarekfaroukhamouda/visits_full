@@ -20,7 +20,7 @@ import { toast } from 'sonner';
 
 const EmployeeModalContent = ({ isEdit, formData, onChange, onSubmit, onClose }: {
   isEdit: boolean;
-  formData: { name: string; role: string; email: string; phone: string };
+  formData: { name: string; role: string; email: string; phone: string; course: string };
   onChange: (field: keyof typeof formData, e: React.ChangeEvent<HTMLInputElement>) => void;
   onSubmit: (e: React.FormEvent) => void;
   onClose: () => void;
@@ -94,6 +94,18 @@ const EmployeeModalContent = ({ isEdit, formData, onChange, onSubmit, onClose }:
         />
       </div>
 
+      <div>
+        <label className="block text-gray-700 mb-2">
+          الدورات التدريبية (مفصولة بفاصلة)
+        </label>
+        <input
+          type="text"
+          value={formData.course}
+          onChange={(e) => onChange('course', e)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          placeholder="مثال: مكافحة العدوى, إدارة الجودة"
+        />
+      </div>
       <div className="flex items-center gap-3 pt-4">
         <button
           type="button"
@@ -122,7 +134,8 @@ export function EmployeesManagement() {
     name: '',
     role: '',
     email: '',
-    phone: ''
+    phone: '',
+    course: ''
   });
 
   const { employees, addEmployee, updateEmployee, deleteEmployee, visits, programs } = useData();
@@ -163,7 +176,7 @@ export function EmployeesManagement() {
     addEmployee(formData);
     toast.success('✅ تم إضافة الموظف بنجاح');
     setShowAddModal(false);
-    setFormData({ name: '', role: '', email: '', phone: '' });
+    setFormData({ name: '', role: '', email: '', phone: '', course: '' });
   };
 
   const handleEditEmployee = (employee: Employee) => {
@@ -172,7 +185,8 @@ export function EmployeesManagement() {
       name: employee.name,
       role: employee.role,
       email: employee.email,
-      phone: employee.phone
+      phone: employee.phone,
+      course: employee.course ? employee.course.join(', ') : ''
     });
   };
 
@@ -182,7 +196,7 @@ export function EmployeesManagement() {
       updateEmployee(editingEmployee.id, formData);
       toast.success('✅ تم تحديث الموظف بنجاح');
       setEditingEmployee(null);
-      setFormData({ name: '', role: '', email: '', phone: '' });
+      setFormData({ name: '', role: '', email: '', phone: '', course: '' });
     }
   };
 
@@ -254,6 +268,12 @@ export function EmployeesManagement() {
                     <p className="text-sm text-gray-600">{employee.role}</p>
                   </div>
                 </div>
+                {employee.course && employee.course.length > 0 && (
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <GraduationCap className="w-4 h-4 text-yellow-600" />
+                    <span>الدورات: {employee.course.join(', ')}</span>
+                  </div>
+                )}
                 <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs flex items-center gap-1">
                   <UserCheck className="w-3 h-3" />
                   نشط

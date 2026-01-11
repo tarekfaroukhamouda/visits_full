@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import * as XLSX from 'xlsx';
 import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BarChart3, Calendar, FileDown, MapPin, Layers } from 'lucide-react';
@@ -53,6 +54,24 @@ export function EmployeePerformance() {
   }, [employees, visits, programs, fromDate, toDate, language]);
 
   const handleExport = () => {
+    if (performanceData.length === 0) {
+      toast.error(t('no_data_export'));
+      return;
+    }
+    // Prepare data for Excel
+    const exportRows = performanceData.map((row) => ({
+      [t('employee_name')]: row.employeeName,
+      [t('total_visits')]: row.totalVisits,
+      [t('completed_visits')]: row.completedVisits,
+      [t('completion_rate')]: row.completionRate + '%',
+      [t('inside_taif')]: row.byLocation.insideTaif,
+      [t('outside_taif')]: row.byLocation.outsideTaif,
+      [t('by_program')]: row.byProgram.map(p => `${p.programName}: ${p.count}`).join('; ')
+    }));
+    const ws = XLSX.utils.json_to_sheet(exportRows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Performance');
+    XLSX.writeFile(wb, `employee_performance_report.xlsx`);
     toast.success(t('export_success'), {
       description: t('export_description') + ' ' + performanceData.length + ' ' + t('employee')
     });

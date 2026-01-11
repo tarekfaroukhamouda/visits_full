@@ -161,6 +161,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         phone_number: employee.phone,
         position: employee.role,
         role: 1, // Default role
+        course: employee.course ? (Array.isArray(employee.course) ? employee.course.join(',') : employee.course) : '',
       };
 
       const newEmployee = await doctorApi.create(backendData);
@@ -180,6 +181,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (updatedEmployee.email) backendData.email = updatedEmployee.email;
       if (updatedEmployee.phone) backendData.phone_number = updatedEmployee.phone;
       if (updatedEmployee.role) backendData.position = updatedEmployee.role;
+      if (updatedEmployee.course !== undefined) backendData.course = Array.isArray(updatedEmployee.course) ? updatedEmployee.course.join(',') : updatedEmployee.course;
 
       const updated = await doctorApi.update(parseInt(id), backendData);
       const transformed = transformEmployee(updated);
@@ -325,6 +327,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (updatedVacation.startDate) backendData.start_date = updatedVacation.startDate;
       if (updatedVacation.endDate) backendData.end_date = updatedVacation.endDate;
       if (updatedVacation.reason !== undefined) backendData.reason = updatedVacation.reason;
+      if (updatedVacation.status !== undefined) backendData.status = updatedVacation.status;
 
       const updated = await vacationApi.update(parseInt(id), backendData);
       const transformed = transformVacation(updated);

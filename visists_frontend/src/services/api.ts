@@ -1,3 +1,21 @@
+// Excel Upload API
+export const excelUploadApi = {
+  uploadVisitsExcel: async (file: File): Promise<any> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/visits/upload-excel/`, {
+      method: 'POST',
+      headers: token ? { 'x-access-tokens': token } : undefined,
+      body: formData,
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'An error occurred' }));
+      throw new Error(error.detail || error.message || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+};
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://138.68.225.253:8000';
 
@@ -195,6 +213,7 @@ export const transformEmployee = (backendDoctor: any): any => {
     role: backendDoctor.position || '',
     email: backendDoctor.email || '',
     phone: backendDoctor.phone_number || '',
+    course: backendDoctor.course ? (Array.isArray(backendDoctor.course) ? backendDoctor.course : backendDoctor.course.split(',')) : [],
     isActive: true, // Assuming all doctors are active
   };
 };
@@ -231,8 +250,8 @@ export const transformVacation = (backendVacation: any): any => {
     startDate: backendVacation.start_date || '',
     endDate: backendVacation.end_date || '',
     reason: backendVacation.reason || '',
-    status: 'pending' as const, // Backend doesn't have status, default to pending
-    requestedAt: new Date().toISOString(),
+    status: backendVacation.status || 'pending',
+    requestedAt: backendVacation.requested_at || new Date().toISOString(),
   };
 };
 

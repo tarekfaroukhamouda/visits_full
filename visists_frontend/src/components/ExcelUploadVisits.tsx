@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useData } from '../contexts/DataContext';
 import { Visit } from '../App';
+import { excelUploadApi } from '../services/api';
 import { toast } from 'sonner@2.0.3';
 import * as XLSX from 'xlsx';
 
@@ -229,71 +230,25 @@ export function ExcelUploadVisits() {
       toast.error(t('fix_validation_errors'));
       return;
     }
-
-    let successCount = 0;
-    let errorCount = 0;
-
-    for (const [index, row] of previewData.entries()) {
-      try {
-        // Find or create facility
-        let facility = facilities.find(f => f.name.toLowerCase() === row.facilityName.toLowerCase());
-        let facilityId = facility?.id;
-
-        // If facility doesn't exist, create a temporary ID
-        if (!facilityId) {
-          facilityId = `temp-${Date.now()}-${index}`;
-        }
-
-        // Find program
-        const program = programs.find(p => 
-          p.name.toLowerCase() === row.program?.toLowerCase() || 
-          p.nameEn.toLowerCase() === row.program?.toLowerCase()
-        );
-
-        // Parse employee names and find their IDs
-        const employeeNames = row.assignedEmployees.split(',').map(name => name.trim());
-        const employeeIds = employeeNames
-          .map(name => employees.find(e => e.name.toLowerCase().includes(name.toLowerCase()))?.id)
-          .filter(id => id !== undefined) as string[];
-
-        // Create visit
-        const newVisit: Omit<Visit, 'id'> = {
-          facilityId: facilityId,
-          facilityName: row.facilityName,
-          type: normalizeType(row.type),
-          location: normalizeLocation(row.location),
-          scheduledDate: formatDate(row.scheduledDate),
-          status: normalizeStatus(row.status || 'scheduled'),
-          assignedEmployees: employeeIds.length > 0 ? employeeIds : [],
-          programId: program?.id,
-          infectionControl: {
-            checklistItems: [],
-            complianceLevel: 0,
-            notes: ''
-          },
-          notes: row.notes
-        };
-
-        const doctorIds = employeeIds.map(id => parseInt(id));
-        await addVisit(newVisit, doctorIds);
-        successCount++;
-      } catch (error) {
-        console.error(`Error importing row ${index + 1}:`, error);
-        errorCount++;
+    if (!file) return;
+    setIsProcessing(true);
+    try {
+      const result = await excelUploadApi.uploadVisitsExcel(file);
+      if (result.visits_added > 0) {
+        toast.success(`${t('visits_imported_success')}: ${result.visits_added}`);
       }
+      if (result.errors && result.errors.length > 0) {
+        toast.error(`${t('visits_import_failed')}: ${result.errors.length}`);
+      }
+      // Optionally: refresh visits data here
+    } catch (error: any) {
+      toast.error(error.message || t('excel_upload_failed'));
+    } finally {
+      setIsProcessing(false);
+      setFile(null);
+      setPreviewData([]);
+      setValidationErrors([]);
     }
-
-    if (successCount > 0) {
-      toast.success(`${t('visits_imported_success')}: ${successCount}`);
-    }
-    if (errorCount > 0) {
-      toast.error(`${t('visits_import_failed')}: ${errorCount}`);
-    }
-
-    // Reset
-    setFile(null);
-    setPreviewData([]);
-    setValidationErrors([]);
   };
 
   const downloadTemplate = () => {

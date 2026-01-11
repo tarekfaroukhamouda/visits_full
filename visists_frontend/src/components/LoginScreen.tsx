@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { User } from '../App';
 import { useLanguage } from '../contexts/LanguageContext';
 import { LogIn, Globe } from 'lucide-react';
-import logo from 'figma:asset/1b4c1bab65c575027790a25e5b25300d49265bc6.png';
+import logo from '../assets/26fdc8a84af1bdd50de5261850b9d1bc61210158.png';
 import { doctorApi } from '../services/api';
 import { toast } from 'sonner@2.0.3';
 

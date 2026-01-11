@@ -101,6 +101,8 @@ const translations: Record<Language, Record<string, string>> = {
     // Facility Type
     'government': 'حكومي',
     'private': 'خاص',
+    'military': 'منظمة عسكرية',
+    'non_profit': 'منظمة غير ربحية',
 
     // Visits Table
     'visits_management': 'جدول الزيارات الميدانية',
@@ -384,6 +386,8 @@ const translations: Record<Language, Record<string, string>> = {
     // Facility Type
     'government': 'Government',
     'private': 'Private',
+    'military': 'Military Organization',
+    'non_profit': 'Non-Profit Organization',
 
     // Visits Table
     'visits_management': 'Field Visits Management',

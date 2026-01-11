@@ -50,6 +50,7 @@ export interface Employee {
   role: string;
   email: string;
   phone: string;
+  course?: string[];
   isActive?: boolean;
   vacations?: Vacation[];
 }

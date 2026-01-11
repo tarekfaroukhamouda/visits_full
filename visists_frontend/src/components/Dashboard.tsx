@@ -38,6 +38,8 @@ import {
   RadialBarChart,
   RadialBar
 } from 'recharts';
+// Navigation will use window.location for dashboard redirect
+import logo from 'figma:asset/26fdc8a84af1bdd50de5261850b9d1bc61210158.png';
 
 interface DashboardProps {
   userRole: number; // 0 = admin, 1 = manager
@@ -49,6 +51,7 @@ export function Dashboard({ userRole }: DashboardProps) {
   const { getStatusLabel, getTypeLabel } = useVisitStatus();
   const formatDate = useFormatDate();
   const stats = useMemo(() => getVisitStats(visits), [visits]);
+  const navigateToDashboard = (path: string) => { window.location.href = path; };
 
   // Colors from theme
   const COLORS = {
@@ -162,7 +165,13 @@ export function Dashboard({ userRole }: DashboardProps) {
                 : 'Comprehensive analytical overview of visits and infection control'}
             </p>
           </div>
-          <Activity className="w-12 h-12 opacity-50" />
+          <button
+            onClick={() => navigateToDashboard('/dashboard')}
+            className="bg-white p-2 rounded-lg shadow-sm hover:scale-105 transition-transform"
+            title={language === 'ar' ? 'الانتقال للوحة المعلومات' : 'Go to Dashboard'}
+          >
+            <img src={logo} alt="Logo" className="w-12 h-12 object-contain" />
+          </button>
         </div>
       </div>
 

@@ -43,7 +43,8 @@ export function FacilitiesManagement() {
     setFormData({
       name: '',
       type: 'government',
-      location: 'inside-taif'
+      location: 'inside-taif',
+      email: ''
     });
     setShowAddModal(false);
   };
@@ -101,46 +102,36 @@ export function FacilitiesManagement() {
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full ${language === 'ar' ? 'pr-10 pl-4' : 'pl-10 pr-4'} py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-            placeholder={t('search_placeholder')}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder={t('search_facility')}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
+          <div>
+            <label className="block text-gray-700 mb-2">{t('facility_type')}</label>
+            <select
+              value={formData.type}
+              onChange={e => setFormData({ ...formData, type: e.target.value as Facility['type'] })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            >
+              <option value="government">{t('government')}</option>
+              <option value="private">{t('private')}</option>
+              <option value="military">{t('military')}</option>
+              <option value="non_profit">{t('non_profit')}</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Facilities Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredFacilities.length > 0 ? filteredFacilities.map((facility) => (
-          <div
-            key={facility.id}
-            className={`bg-white rounded-lg shadow-sm border-2 p-6 ${
-              facility.location === 'inside-taif'
-                ? 'border-green-200 bg-green-50'
-                : 'border-amber-200 bg-amber-50'
-            }`}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                  facility.location === 'inside-taif'
-                    ? 'bg-green-100'
-                    : 'bg-amber-100'
-                }`}>
-                  <Building2 className={`w-6 h-6 ${
-                    facility.location === 'inside-taif'
-                      ? 'text-green-600'
-                      : 'text-amber-600'
-                  }`} />
-                </div>
-                <div>
-                  <h3 className="text-gray-900">{facility.name}</h3>
-                  <p className="text-sm text-gray-600">
-                    {facility.type === 'government' ? t('government') : t('private')}
-                  </p>
-                </div>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        {filteredFacilities.length > 0 ? filteredFacilities.map(facility => (
+          <div key={facility.id} className="bg-white border rounded-lg p-4 shadow-sm flex flex-col gap-2">
+            <div>
+              <h3 className="text-gray-900">{facility.name}</h3>
+              <p className="text-sm text-gray-600">
+                {facility.type === 'government' ? t('government') : t('private')}
+              </p>
             </div>
-
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="w-4 h-4 text-gray-500" />
               <span className={`text-sm px-3 py-1 rounded-full ${
@@ -151,7 +142,6 @@ export function FacilitiesManagement() {
                 {facility.location === 'inside-taif' ? t('inside_taif') : t('outside_taif')}
               </span>
             </div>
-
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleEdit(facility)}

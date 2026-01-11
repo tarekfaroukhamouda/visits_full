@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Building2, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Building2, Users, Trash2 } from 'lucide-react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -15,7 +15,7 @@ interface CalendarViewProps {
 
 export function CalendarView({ userRole }: CalendarViewProps) {
   const { t, language, dir } = useLanguage();
-  const { visits, programs, facilities } = useData();
+  const { visits, programs, facilities, deleteVisit } = useData();
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
@@ -98,6 +98,16 @@ export function CalendarView({ userRole }: CalendarViewProps) {
     setIsDetailsOpen(true);
   };
 
+  const handleDelete = async (visit: Visit) => {
+    if (window.confirm(`${t('delete_confirm')} ${visit.facilityName || visit.name}?`)) {
+      try {
+        await deleteVisit(visit.id);
+      } catch (err) {
+        // Error handled in DataContext
+      }
+    }
+  };
+
   // Render calendar grid
   const renderCalendarDays = () => {
     const days = [];
@@ -168,6 +178,21 @@ export function CalendarView({ userRole }: CalendarViewProps) {
                       </span>
                     </div>
                   )}
+
+                  {/* Delete button */}
+                  <div className="flex justify-end mt-2">
+                    <button
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleDelete(visit);
+                      }}
+                      className="flex items-center gap-1 px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded transition-colors"
+                      title={t('delete')}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      {t('delete')}
+                    </button>
+                  </div>
                 </div>
               );
             })}
