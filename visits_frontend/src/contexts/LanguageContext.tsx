@@ -1,0 +1,635 @@
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+
+export type Language = 'ar' | 'en';
+
+interface LanguageContextType {
+  language: Language;
+  toggleLanguage: () => void;
+  t: (key: string) => string;
+  dir: 'rtl' | 'ltr';
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguage] = useState<Language>(() => {
+    const saved = localStorage.getItem('language');
+    return (saved as Language) || 'ar';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('language', language);
+  }, [language]);
+
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'ar' ? 'en' : 'ar');
+  };
+
+  const t = (key: string): string => {
+    return translations[language][key] || key;
+  };
+
+  const dir = language === 'ar' ? 'rtl' : 'ltr';
+
+  return (
+    <LanguageContext.Provider value={{ language, toggleLanguage, t, dir }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
+}
+
+// Translations
+const translations: Record<Language, Record<string, string>> = {
+  ar: {
+    // Header
+    'system_title': 'نظام مكافحة العدوى',
+    'system_subtitle': 'IPC Taif',
+    'admin': 'مدير النظام',
+    'manager': 'مشرف',
+    'logout': 'تسجيل الخروج',
+    'reset_data': 'إعادة تعيين',
+    'reset_confirm': 'هل أنت متأكد من إعادة تعيين جميع البيانات إلى الحالة الأولية؟',
+    'reset_success': '✅ تم إعادة تعيين البيانات بنجاح',
+
+    // Login
+    'login_title': 'تسجيل الدخول',
+    'login_subtitle': 'نظام إدارة الزيارات الميدانية ومكافحة العدوى',
+    'username': 'اسم المستخدم',
+    'password': 'كلمة المرور',
+    'login_button': 'دخول',
+    'admin_credentials': 'مدير: admin / admin123',
+    'manager_credentials': 'مشرف: manager / manager123',
+    'user_credentials': 'موظف: user / user123',
+    'login_error': 'اسم المستخدم أو كلمة المرور غير صحيحة',
+    'login_success': 'تم تسجيل الدخول بنجاح',
+    'loading': 'جاري التحميل...',
+
+    // Sidebar
+    'home': 'الرئيسية',
+    'visits_table': 'جدول الزيارات',
+    'add_visit': 'إضافة زيارة',
+    'employees': 'الموظفين',
+    'my_visits': 'زياراتي',
+    'my_report': 'تقاريري',
+    'doctor': 'طبيب / موظف',
+    'main_menu': 'القائمة الرئيسية',
+
+    // Dashboard
+    'total_visits': 'إجمالي الزيارات',
+    'completed': 'مكتملة',
+    'scheduled': 'مجدولة',
+    'postponed': 'مؤجلة',
+    'recent_visits': 'المهام المنجزة',
+    'upcoming_visits': 'المهام القادمة',
+    'postponed_visits': 'الزيارات المؤجلة',
+    'facility': 'المنشأة',
+    'date': 'التاريخ',
+    'status': 'الحالة',
+    'compliance': 'الالتزام',
+    'employees_assigned': 'الموظفين',
+    'postpone_reason': 'سبب التأجيل',
+    'no_data': 'لا توجد بيانات',
+    'view_details': 'عرض التفاصيل',
+
+    // Visit Status
+    'status_completed': 'مكتملة',
+    'status_scheduled': 'مجدولة',
+    'status_postponed': 'مؤجلة',
+    'status_unscheduled': 'غير مجدولة',
+
+    // Facility Type
+    'government': 'حكومي',
+    'private': 'خاص',
+    'military': 'منظمة عسكرية',
+    'non_profit': 'منظمة غير ربحية',
+
+    // Visits Table
+    'visits_management': 'جدول الزيارات الميدانية',
+    'visits_subtitle': 'إدارة ومتابعة جميع الزيارات',
+    'export_excel': 'تصدير Excel',
+    'search': 'البحث',
+    'search_placeholder': 'ابحث عن منشأة...',
+    'visit_status': 'حالة الزيارة',
+    'all_statuses': 'جميع الحالات',
+    'facility_type': 'نوع المنشأة',
+    'all_types': 'جميع الأنواع',
+    'type': 'النوع',
+    'scheduled_date': 'التاريخ المجدول',
+    'actions': 'الإجراءات',
+    'edit': 'تعديل',
+    'delete': 'حذف',
+    'no_visits': 'لا تود زيارات مطابقة للبحث',
+    'showing': 'عرض',
+    'of': 'من',
+    'visit': 'زيارة',
+    'delete_confirm': 'هل أنت متأكد من حذف زيارة',
+    'delete_success': '✅ تم حذف الزيارة بنجاح',
+    'export_success': '✅ تم تصدير الملف بنجاح',
+    'export_description': 'تم حفظ',
+    'export_description_end': 'زيارة في ملف Excel',
+
+    // Add Visit Form
+    'add_visit_title': 'إضافة زيارة ميدانية جديدة',
+    'basic_info': 'المعلومات الأساسية',
+    'facility_name': 'اسم المنشأة',
+    'facility_name_placeholder': 'مثال: مستشفى الملك فيصل التخصصي',
+    'actual_date': 'التاريخ الفعلي',
+    'postpone_reason_label': 'سبب التأجيل',
+    'postpone_reason_placeholder': 'اكتب سبب التأجيل...',
+    'assigned_employees': 'الموظفين المكلفين',
+    'infection_control': 'تقييم مكافحة العدوى',
+    'enable': 'تفعيل',
+    'checklist_items': 'بنود المراجعة',
+    'checklist_placeholder': 'مثال: التحقق من بروتوكولات التعقيم',
+    'add_item': 'إضافة بند',
+    'compliance_level': 'نسبة الالتزام (%)',
+    'notes': 'ملاحظات',
+    'notes_placeholder': 'ملاحظات عامة حول الزيارة والالتزام...',
+    'save': 'حفظ',
+    'cancel': 'إلغاء',
+    'required_fields': 'الرجاء ملء جميع الحقول المطلوبة',
+    'checklist_required': 'الرجاء إضافة بند واحد على الأقل للمراجعة',
+    'visit_added': '✅ تم إضافة الزيارة بنجاح',
+    'visit_added_description': 'تمت إضافة زيارة',
+    'visit_added_description_end': 'بنجاح',
+
+    // Edit Visit
+    'edit_visit_title': 'تعديل الزيارة',
+    'save_changes': 'حفظ التعديلات',
+    'visit_updated': '✅ تم تحديث الزيارة بنجاح',
+
+    // Visit Details Modal
+    'visit_details': 'تفاصيل الزيارة',
+    'export_pdf': 'تصدير PDF',
+    'close': 'إغلاق',
+
+    // Employees Management
+    'employees_management': 'إدارة الموظفين',
+    'employees_subtitle': 'إدارة ومتابعة الموظفين المكلفين بالزيارات الميدانية',
+    'add_employee': 'إضافة موظف',
+    'add_employee_title': 'إضافة موظف جديد',
+    'edit_employee_title': 'تعديل موظف',
+    'full_name': 'الاسم الكامل',
+    'full_name_placeholder': 'مثال: د. محمد العتيبي',
+    'position': 'الوظيفة',
+    'position_placeholder': 'مثال: أخصائي مكافحة العدوى',
+    'email': 'البريد الإلتروني',
+    'email_placeholder': 'example@health.gov.sa',
+    'phone': 'رقم الهاتف',
+    'phone_placeholder': '05xxxxxxxx',
+    'active': 'نشط',
+    'no_employees': 'لا توجد نتائج مطابقة للبحث',
+    'employee_added': '✅ تم إضافة الموظف بنجاح',
+    'employee_updated': '✅ تم تحديث الموظف بنجاح',
+    'employee_deleted': '✅ تم حذف الموظف بنجاح',
+    'delete_employee_confirm': 'هل أنت متأكد من حذف',
+
+    // Common
+    'required': '*',
+    'employee': 'موظف',
+    'visits': 'الزيارات',
+
+    // New Features
+    'facilities': 'المنشآت',
+    'programs': 'البرامج',
+    'performance': 'تقارير الأداء',
+    'unscheduled_visits': 'الزيارات الغير مجدولة',
+    'cancelled_visits': 'الزيارات الملغاة',
+    'status_cancelled': 'ملغاة',
+    'visits_by_department': 'الزيارات حسب الأقسام',
+    'inside_taif': 'داخل الطائف',
+    'outside_taif': 'خارج الطائف',
+    'location': 'الموقع',
+    'all_locations': 'جميع المواقع',
+    
+    // Programs
+    'programs_management': 'إدارة البرامج',
+    'programs_subtitle': 'إدارة ومتابعة البرامج والزيارات',
+    'add_program': 'إضافة برنامج',
+    'program_name': 'اسم البرنامج',
+    'program_name_en': '��لاسم بالإنجليزية',
+    'target_visits': 'الزيارات المستهدفة',
+    'completed_visits_count': 'الزيارات المنجزة',
+    'remaining_visits': 'الزيارات المتبقية',
+    'completion_rate': 'نسبة الإنجاز',
+    'corrective_plans': 'الخطط التصحيحية',
+    'approved_plans': 'المعتمدة',
+    'pending_plans': 'المعلقة',
+    'training_sessions': 'دورات التدريب',
+    'program_added': '✅ تم إضافة البرنامج بنجاح',
+    'program_updated': '✅ تم تحديث البرنامج بنجاح',
+    'program_deleted': '✅ تم حذف البرنامج بنجاح',
+    
+    // Facilities
+    'facilities_management': 'إدارة المنشآت',
+    'facilities_subtitle': 'إدارة وتصنيف المنشآت الصحية',
+    'add_facility': 'إضافة منشأة',
+    'facility_added': '✅ تم إضافة المنشأة بنجاح',
+    'facility_updated': '✅ تم تحديث المنشأة بنجاح',
+    'facility_deleted': '✅ تم حذف المنشأة بنجاح',
+    'no_facilities': 'لا توجد منشآت',
+    
+    // Employee Performance
+    'employee_performance': 'تقارير أداء الموظفين',
+    'performance_subtitle': 'تحليل أداء الموظفين والإنجازات',
+    'select_period': 'اختر الفترة',
+    'from_date': 'من تاريخ',
+    'to_date': 'إلى تاريخ',
+    'generate_report': 'إنشاء التقرير',
+    'employee_name': 'اسم الموظف',
+    'total_visits_assigned': 'إجمالي الزيارات',
+    'completed_visits': 'المنجزة',
+    'by_program': 'حسب البرنامج',
+    'by_location': 'حسب الموقع',
+    'task_completion': 'نسبة إنجاز المهام',
+    'export_report': 'تصدير التقرير',
+
+    // Vacations & Conflicts
+    'vacations': 'الإجازات',
+    'vacation_management': 'إدارة الإجازات',
+    'add_vacation': 'إضافة إجازة',
+    'vacation_start': 'بداية الإجازة',
+    'vacation_end': 'نهاية الإجازة',
+    'vacation_reason': 'سبب الإجازة',
+    'vacation_status_pending': 'قيد الانتظار',
+    'vacation_status_approved': 'معتمدة',
+    'vacation_status_rejected': 'مرفوضة',
+    'approve': 'اعتماد',
+    'reject': 'رفض',
+    'vacation_approved': '✅ تم اعتماد الإجازة',
+    'vacation_rejected': '❌ تم رفض الإجازة',
+    'employee_on_vacation': '⚠️ الموظف في إجازة خلال هذه الفترة',
+    'employee_has_conflict': '⚠️ الموظف لديه زيارة أخرى في نفس التاريخ',
+    'employee_unavailable': '⚠️ الموظف غير متاح في هذا التاريخ',
+    
+    // Swap Requests
+    'swap_visit': 'تبديل الزيارة',
+    'swap_request': 'طلب تبديل',
+    'swap_with': 'تبديل مع',
+    'swap_reason': 'سبب التبديل',
+    'swap_requested': '✅ تم إرسال طلب التبديل',
+    'swap_approved': '✅ تم قبول طلب التبديل',
+    'swap_rejected': '❌ تم رفض طلب التبديل',
+    'pending_swaps': 'طلبات التبديل المعلقة',
+    'swap_requests': 'طلبات التبديل',
+    
+    // Tasks & Corrective Plans
+    'tasks': 'المهام',
+    'add_task': 'إضافة مهمة',
+    'task_placeholder': 'مثال: مراجعة بروتوكولات التعقيم',
+    'corrective_plan': 'الخطة التصحيحية',
+    'plan_status': 'حالة الخطة',
+    'plan_approved': 'معتمدة',
+    'plan_under_review': 'تحت المراجعة',
+    'plan_pending': 'معلقة',
+    'upload_documents': 'رفع المستندات',
+    'upload_images': 'رفع الصور والشواهد',
+    'plan_notes': 'ملاحظات الخطة',
+    'documents': 'المستندات',
+    'images': 'الصور والشواهد',
+    'approve_plan': 'اعتماد الخطة',
+    'review_plan': 'تحت المراجعة',
+    
+    // Employee History
+    'employee_history': 'سجل الموظف',
+    'previous_visits': 'الزيارات السابقة',
+    'upcoming_visits_emp': 'الزيارات القادمة',
+    'view_history': 'عرض السجل',
+    'total_completed': 'إجمالي المنجزة',
+    'total_upcoming': 'إجمالي القادمة',
+    'reviewed_by': 'تمت المراجعة بواسطة',
+    
+    // Excel Upload
+    'excel_upload_visits': 'استيراد الزيارات من Excel',
+    'excel_upload_subtitle': 'رفع ملف Excel لجدولة الزيارات بشكل جماعي',
+    'download_template': 'تحميل نموذج Excel',
+    'drag_drop_excel': 'اسحب وأفلت ملف Excel هنا',
+    'or': 'أو',
+    'browse_files': 'تصفح الملفات',
+    'supported_formats': 'الصيغ المدعومة',
+    'invalid_file_type': '⚠️ نوع الملف غير صحيح. الجاء رفع ملف Excel أو CSV',
+    'excel_parse_error': '❌ خطأ في قراءة الملف',
+    'field_required': 'هذا الحقل مطلوب',
+    'invalid_facility_type': 'نوع المنشأة غير صحيح (حكومي/خاص)',
+    'invalid_location': 'الموقع غير صحيح (داخل الطائف/خارج الطائف)',
+    'invalid_date_format': 'صيغة التاريخ غير صحيحة',
+    'validation_errors_found': 'تم العثور على أخطاء',
+    'row': 'الصف',
+    'validation_passed': '✅ تم التحقق بنجاح',
+    'visits_ready_import': 'زيارة جاهزة ��لاستيراد',
+    'preview_data': 'معاينة البيانات',
+    'showing_first': 'عرض أول',
+    'rows': 'صفوف',
+    'import_visits': 'استيراد الزيارات',
+    'fix_validation_errors': '⚠️ الرجاء إصلاح الأخطاء قبل الاستيراد',
+    'visits_imported_success': '✅ تم استيراد الزيارات بنجاح',
+    'visits_import_failed': '❌ فشل استيراد بعض الزيارات',
+    'template_downloaded': '✅ تم تحميل النموذج بنجاح',
+    'excel_upload': 'Excel Upload',
+    
+    // Calendar View
+    'calendar_view_subtitle': 'عرض وإدارة الزيارات في التقويم',
+    'today': 'اليوم',
+    'more': 'المزيد'
+  },
+  en: {
+    // Header
+    'system_title': 'ICP',
+    'system_subtitle': 'Infection Control Program',
+    'admin': 'System Administrator',
+    'manager': 'Supervisor',
+    'logout': 'Logout',
+    'reset_data': 'Reset Data',
+    'reset_confirm': 'Are you sure you want to reset all data to initial state?',
+    'reset_success': '✅ Data reset successfully',
+
+    // Login
+    'login_title': 'Login',
+    'login_subtitle': 'Field Visits Management and Infection Control System',
+    'username': 'Username',
+    'password': 'Password',
+    'login_button': 'Login',
+    'admin_credentials': 'Admin: admin / admin123',
+    'manager_credentials': 'Manager: manager / manager123',
+    'user_credentials': 'Employee: user / user123',
+    'login_error': 'Invalid username or password',
+    'login_success': 'Login successful',
+    'loading': 'Loading...',
+
+    // Sidebar
+    'home': 'Home',
+    'visits_table': 'Visits Table',
+    'add_visit': 'Add Visit',
+    'employees': 'Employees',
+    'my_visits': 'My Visits',
+    'my_report': 'My Report',
+    'doctor': 'Doctor / Employee',
+    'main_menu': 'Main Menu',
+
+    // Dashboard
+    'total_visits': 'Total Visits',
+    'completed': 'Completed',
+    'scheduled': 'Scheduled',
+    'postponed': 'Postponed',
+    'recent_visits': 'Completed Tasks',
+    'upcoming_visits': 'Upcoming Tasks',
+    'postponed_visits': 'Postponed Visits',
+    'facility': 'Facility',
+    'date': 'Date',
+    'status': 'Status',
+    'compliance': 'Compliance',
+    'employees_assigned': 'Employees',
+    'postpone_reason': 'Postpone Reason',
+    'no_data': 'No data available',
+    'view_details': 'View Details',
+
+    // Visit Status
+    'status_completed': 'Completed',
+    'status_scheduled': 'Scheduled',
+    'status_postponed': 'Postponed',
+    'status_unscheduled': 'Unscheduled',
+
+    // Facility Type
+    'government': 'Government',
+    'private': 'Private',
+    'military': 'Military Organization',
+    'non_profit': 'Non-Profit Organization',
+
+    // Visits Table
+    'visits_management': 'Field Visits Management',
+    'visits_subtitle': 'Manage and track all visits',
+    'export_excel': 'Export Excel',
+    'search': 'Search',
+    'search_placeholder': 'Search for a facility...',
+    'visit_status': 'Visit Status',
+    'all_statuses': 'All Statuses',
+    'facility_type': 'Facility Type',
+    'all_types': 'All Types',
+    'type': 'Type',
+    'scheduled_date': 'Scheduled Date',
+    'actions': 'Actions',
+    'edit': 'Edit',
+    'delete': 'Delete',
+    'no_visits': 'No matching visits found',
+    'showing': 'Showing',
+    'of': 'of',
+    'visit': 'visit',
+    'delete_confirm': 'Are you sure you want to delete visit',
+    'delete_success': '✅ Visit deleted successfully',
+    'export_success': '✅ File exported successfully',
+    'export_description': 'Saved',
+    'export_description_end': 'visits to Excel file',
+
+    // Add Visit Form
+    'add_visit_title': 'Add New Field Visit',
+    'basic_info': 'Basic Information',
+    'facility_name': 'Facility Name',
+    'facility_name_placeholder': 'e.g., King Faisal Specialist Hospital',
+    'actual_date': 'Actual Date',
+    'postpone_reason_label': 'Postpone Reason',
+    'postpone_reason_placeholder': 'Enter postpone reason...',
+    'assigned_employees': 'Assigned Employees',
+    'infection_control': 'Infection Control Assessment',
+    'enable': 'Enable',
+    'checklist_items': 'Checklist Items',
+    'checklist_placeholder': 'e.g., Verify sterilization protocols',
+    'add_item': 'Add Item',
+    'compliance_level': 'Compliance Level (%)',
+    'notes': 'Notes',
+    'notes_placeholder': 'General notes about visit and compliance...',
+    'save': 'Save',
+    'cancel': 'Cancel',
+    'required_fields': 'Please fill all required fields',
+    'checklist_required': 'Please add at least one checklist item',
+    'visit_added': '✅ Visit added successfully',
+    'visit_added_description': 'Visit',
+    'visit_added_description_end': 'added successfully',
+
+    // Edit Visit
+    'edit_visit_title': 'Edit Visit',
+    'save_changes': 'Save Changes',
+    'visit_updated': '✅ Visit updated successfully',
+
+    // Visit Details Modal
+    'visit_details': 'Visit Details',
+    'export_pdf': 'Export PDF',
+    'close': 'Close',
+
+    // Employees Management
+    'employees_management': 'Employees Management',
+    'employees_subtitle': 'Manage and track employees assigned to field visits',
+    'add_employee': 'Add Employee',
+    'add_employee_title': 'Add New Employee',
+    'edit_employee_title': 'Edit Employee',
+    'full_name': 'Full Name',
+    'full_name_placeholder': 'e.g., Dr. Mohammed Al-Otaibi',
+    'position': 'Position',
+    'position_placeholder': 'e.g., Infection Control Specialist',
+    'email': 'Email',
+    'email_placeholder': 'example@health.gov.sa',
+    'phone': 'Phone Number',
+    'phone_placeholder': '05xxxxxxxx',
+    'active': 'Active',
+    'no_employees': 'No matching results found',
+    'employee_added': '✅ Employee added successfully',
+    'employee_updated': '✅ Employee updated successfully',
+    'employee_deleted': '✅ Employee deleted successfully',
+    'delete_employee_confirm': 'Are you sure you want to delete',
+
+    // Common
+    'required': '*',
+    'employee': 'employee',
+    'visits': 'Visits',
+
+    // New Features
+    'facilities': 'Facilities',
+    'programs': 'Programs',
+    'performance': 'Performance Reports',
+    'unscheduled_visits': 'Unscheduled Visits',
+    'cancelled_visits': 'Cancelled Visits',
+    'status_cancelled': 'Cancelled',
+    'visits_by_department': 'Visits by Department',
+    'inside_taif': 'Inside Taif',
+    'outside_taif': 'Outside Taif',
+    'location': 'Location',
+    'all_locations': 'All Locations',
+    
+    // Programs
+    'programs_management': 'Programs Management',
+    'programs_subtitle': 'Manage and track programs and visits',
+    'add_program': 'Add Program',
+    'program_name': 'Program Name',
+    'program_name_en': 'English Name',
+    'target_visits': 'Target Visits',
+    'completed_visits_count': 'Completed Visits',
+    'remaining_visits': 'Remaining Visits',
+    'completion_rate': 'Completion Rate',
+    'corrective_plans': 'Corrective Plans',
+    'approved_plans': 'Approved',
+    'pending_plans': 'Pending',
+    'training_sessions': 'Training Sessions',
+    'program_added': '✅ Program added successfully',
+    'program_updated': '✅ Program updated successfully',
+    'program_deleted': '✅ Program deleted successfully',
+    
+    // Facilities
+    'facilities_management': 'Facilities Management',
+    'facilities_subtitle': 'Manage and categorize health facilities',
+    'add_facility': 'Add Facility',
+    'facility_added': '✅ Facility added successfully',
+    'facility_updated': '✅ Facility updated successfully',
+    'facility_deleted': '✅ Facility deleted successfully',
+    'no_facilities': 'No facilities',
+    
+    // Employee Performance
+    'employee_performance': 'Employee Performance Reports',
+    'performance_subtitle': 'Analyze employee performance and achievements',
+    'select_period': 'Select Period',
+    'from_date': 'From Date',
+    'to_date': 'To Date',
+    'generate_report': 'Generate Report',
+    'employee_name': 'Employee Name',
+    'total_visits_assigned': 'Total Visits Assigned',
+    'completed_visits': 'Completed Visits',
+    'by_program': 'By Program',
+    'by_location': 'By Location',
+    'task_completion': 'Task Completion Rate',
+    'export_report': 'Export Report',
+
+    // Vacations & Conflicts
+    'vacations': 'Vacations',
+    'vacation_management': 'Vacation Management',
+    'add_vacation': 'Add Vacation',
+    'vacation_start': 'Vacation Start',
+    'vacation_end': 'Vacation End',
+    'vacation_reason': 'Vacation Reason',
+    'vacation_status_pending': 'Pending',
+    'vacation_status_approved': 'Approved',
+    'vacation_status_rejected': 'Rejected',
+    'approve': 'Approve',
+    'reject': 'Reject',
+    'vacation_approved': '✅ Vacation Approved',
+    'vacation_rejected': '❌ Vacation Rejected',
+    'employee_on_vacation': '⚠️ Employee is on vacation during this period',
+    'employee_has_conflict': '⚠️ Employee has another visit on the same date',
+    'employee_unavailable': '⚠️ Employee is unavailable on this date',
+    
+    // Swap Requests
+    'swap_visit': 'Swap Visit',
+    'swap_request': 'Swap Request',
+    'swap_with': 'Swap With',
+    'swap_reason': 'Swap Reason',
+    'swap_requested': '✅ Swap request sent',
+    'swap_approved': '✅ Swap request approved',
+    'swap_rejected': '❌ Swap request rejected',
+    'pending_swaps': 'Pending Swap Requests',
+    'swap_requests': 'Swap Requests',
+    
+    // Tasks & Corrective Plans
+    'tasks': 'Tasks',
+    'add_task': 'Add Task',
+    'task_placeholder': 'Example: Review sterilization protocols',
+    'corrective_plan': 'Corrective Plan',
+    'plan_status': 'Plan Status',
+    'plan_approved': 'Approved',
+    'plan_under_review': 'Under Review',
+    'plan_pending': 'Pending',
+    'upload_documents': 'Upload Documents',
+    'upload_images': 'Upload Images & Evidence',
+    'plan_notes': 'Plan Notes',
+    'documents': 'Documents',
+    'images': 'Images & Evidence',
+    'approve_plan': 'Approve Plan',
+    'review_plan': 'Under Review',
+    
+    // Employee History
+    'employee_history': 'Employee History',
+    'previous_visits': 'Previous Visits',
+    'upcoming_visits_emp': 'Upcoming Visits',
+    'view_history': 'View History',
+    'total_completed': 'Total Completed',
+    'total_upcoming': 'Total Upcoming',
+    'reviewed_by': 'Reviewed By',
+    
+    // Excel Upload
+    'excel_upload_visits': 'Import Visits from Excel',
+    'excel_upload_subtitle': 'Upload Excel file to schedule visits in bulk',
+    'download_template': 'Download Excel Template',
+    'drag_drop_excel': 'Drag and drop Excel file here',
+    'or': 'or',
+    'browse_files': 'Browse Files',
+    'supported_formats': 'Supported Formats',
+    'invalid_file_type': '⚠️ Invalid file type. Please upload Excel or CSV file',
+    'excel_parse_error': '❌ Error reading file',
+    'field_required': 'This field is required',
+    'invalid_facility_type': 'Invalid facility type (government/private)',
+    'invalid_location': 'Invalid location (inside-taif/outside-taif)',
+    'invalid_date_format': 'Invalid date format',
+    'validation_errors_found': 'Errors found',
+    'row': 'Row',
+    'validation_passed': '✅ Validation passed',
+    'visits_ready_import': 'visits ready to import',
+    'preview_data': 'Data Preview',
+    'showing_first': 'Showing first',
+    'rows': 'rows',
+    'import_visits': 'Import Visits',
+    'fix_validation_errors': '⚠️ Please fix errors before importing',
+    'visits_imported_success': '✅ Visits imported successfully',
+    'visits_import_failed': '❌ Failed to import some visits',
+    'template_downloaded': '✅ Template downloaded successfully',
+    'excel_upload': 'Excel Upload',
+    
+    // Calendar View
+    'calendar_view_subtitle': 'View and manage visits on calendar',
+    'today': 'Today',
+    'more': 'More'
+  }
+};
