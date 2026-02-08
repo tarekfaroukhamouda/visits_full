@@ -13,10 +13,11 @@ import { EmployeeHistory } from './components/EmployeeHistory';
 import { ExcelUploadVisits } from './components/ExcelUploadVisits';
 import { MyVisits } from './components/MyVisits';
 import { MyReport } from './components/MyReport';
-import { DataProvider } from './contexts/DataContext';
+import { TasksManagement } from './components/TasksManagement';
+import { DataProvider, useData } from './contexts/DataContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { Toaster } from './components/ui/sonner';
-import { Users, Calendar, FileText, Home, Building2, BarChart3, Layers, Palmtree, RefreshCw, History, FileUp, ClipboardList } from 'lucide-react';
+import { Users, Calendar, FileText, Home, Building2, BarChart3, Layers, Palmtree, RefreshCw, History, FileUp, ClipboardList, CheckSquare } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { doctorApi } from './services/api';
 
@@ -98,11 +99,13 @@ export interface Visit {
   type: 'government' | 'private';
   location?: 'inside-taif' | 'outside-taif';
   scheduledDate: string;
+  endDate?: string;
   hijriDate?: string;
   actualDate?: string;
   status: 'completed' | 'postponed' | 'scheduled' | 'unscheduled' | 'cancelled';
   assignedEmployees: string[];
   postponeReason?: string;
+  report?: string;
   programId?: string;
   tasks?: string[];
   correctivePlan?: CorrectivePlan;
@@ -114,14 +117,22 @@ export interface Visit {
   correctivePlanApproved?: boolean;
 }
 
-type ViewType = 'dashboard' | 'visits' | 'add-visit' | 'employees' | 'facilities' | 'performance' | 'programs' | 'vacations' | 'swap-requests' | 'employee-history' | 'excel-upload' | 'my-visits' | 'my-report';
+type ViewType = 'dashboard' | 'visits' | 'add-visit' | 'employees' | 'facilities' | 'performance' | 'programs' | 'vacations' | 'swap-requests' | 'employee-history' | 'excel-upload' | 'my-visits' | 'my-report' | 'tasks';
 
 function AppContent() {
   console.log('AppContent component rendering');
   const { t, dir } = useLanguage();
+  const { refreshData } = useData();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Refresh data when user changes (login/load)
+  useEffect(() => {
+    if (currentUser) {
+      refreshData();
+    }
+  }, [currentUser, refreshData]);
 
   useEffect(() => {
     let cancelled = false;
@@ -200,15 +211,15 @@ function AppContent() {
         localStorage.removeItem('user_info');
         setCurrentUser(null);
       }} />
-      
+
       <div className="flex">
         {isSidebarOpen && (
-          <div 
+          <div
             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden animate-fade-in"
             onClick={() => setIsSidebarOpen(false)}
           />
         )}
-        
+
         <div className={`fixed lg:static inset-y-0 ${dir === 'rtl' ? 'right-0' : 'left-0'} z-50 w-64 glass-effect ${dir === 'rtl' ? 'border-l' : 'border-r'} border-gray-200/50 transform transition-all duration-300 ease-out lg:transform-none shadow-soft ${isSidebarOpen ? 'translate-x-0' : dir === 'rtl' ? 'translate-x-full lg:translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
           <div className="h-full overflow-y-auto pt-4 lg:pt-0">
             {!isDoctor && (
@@ -246,6 +257,15 @@ function AppContent() {
                     <span className="font-medium text-sm">{t('my_report')}</span>
                   </button>
                   <button
+                    onClick={() => { setCurrentView('visits'); setIsSidebarOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${currentView === 'visits' ? 'gradient-primary text-white shadow-soft' : 'text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${currentView === 'visits' ? 'bg-white/20' : 'bg-blue-50 group-hover:bg-blue-100'}`}>
+                      <Calendar className={`w-5 h-5 ${currentView === 'visits' ? 'text-white' : 'text-blue-600'}`} />
+                    </div>
+                    <span className="font-medium text-sm">{t('calendar')}</span>
+                  </button>
+                  <button
                     onClick={() => { setCurrentView('vacations'); setIsSidebarOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${currentView === 'vacations' ? 'gradient-primary text-white shadow-soft' : 'text-gray-700 hover:bg-gray-50'}`}
                   >
@@ -262,6 +282,15 @@ function AppContent() {
                       <RefreshCw className={`w-5 h-5 ${currentView === 'swap-requests' ? 'text-white' : 'text-orange-600'}`} />
                     </div>
                     <span className="font-medium text-sm">{t('swap_requests')}</span>
+                  </button>
+                  <button
+                    onClick={() => { setCurrentView('tasks'); setIsSidebarOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${currentView === 'tasks' ? 'gradient-primary text-white shadow-soft' : 'text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${currentView === 'tasks' ? 'bg-white/20' : 'bg-rose-50 group-hover:bg-rose-100'}`}>
+                      <CheckSquare className={`w-5 h-5 ${currentView === 'tasks' ? 'text-white' : 'text-rose-600'}`} />
+                    </div>
+                    <span className="font-medium text-sm">{t('tasks')}</span>
                   </button>
                 </>
               ) : (
@@ -283,6 +312,15 @@ function AppContent() {
                       <Calendar className={`w-5 h-5 ${currentView === 'visits' ? 'text-white' : 'text-green-600'}`} />
                     </div>
                     <span className="font-medium text-sm">{t('visits_table')}</span>
+                  </button>
+                  <button
+                    onClick={() => { setCurrentView('tasks'); setIsSidebarOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${currentView === 'tasks' ? 'gradient-primary text-white shadow-soft' : 'text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${currentView === 'tasks' ? 'bg-white/20' : 'bg-rose-50 group-hover:bg-rose-100'}`}>
+                      <CheckSquare className={`w-5 h-5 ${currentView === 'tasks' ? 'text-white' : 'text-rose-600'}`} />
+                    </div>
+                    <span className="font-medium text-sm">{t('tasks')}</span>
                   </button>
                   <button
                     onClick={() => { setCurrentView('add-visit'); setIsSidebarOpen(false); }}
@@ -353,6 +391,7 @@ function AppContent() {
             {currentView === 'visits' && <CalendarView userRole={currentUser.role} />}
             {currentView === 'add-visit' && <AddVisitForm />}
             {currentView === 'my-report' && <MyReport userId={currentUser.id} />}
+            {currentView === 'tasks' && <TasksManagement user={currentUser} />}
             {currentView === 'employees' && currentUser.role === 0 && <EmployeesManagement />}
             {currentView === 'facilities' && currentUser.role === 0 && <FacilitiesManagement />}
             {currentView === 'programs' && currentUser.role === 0 && <ProgramsManagement />}

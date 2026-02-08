@@ -117,6 +117,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         location_id: parseInt(visit.facilityId),
         program_id: visit.programId ? parseInt(visit.programId) : null,
         date: visit.scheduledDate,
+        end_date: visit.endDate || null,
         hijri_date: (visit as any).hijriDate || null,
         duties: visit.tasks?.join(', ') || null,
         status: visit.status || 'scheduled',
@@ -140,10 +141,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (updatedVisit.facilityId) backendData.location_id = parseInt(updatedVisit.facilityId);
       if (updatedVisit.programId !== undefined) backendData.program_id = updatedVisit.programId ? parseInt(updatedVisit.programId) : null;
       if (updatedVisit.scheduledDate) backendData.date = updatedVisit.scheduledDate;
+      if (updatedVisit.endDate !== undefined) backendData.end_date = updatedVisit.endDate || null;
       if ((updatedVisit as any).hijriDate !== undefined) backendData.hijri_date = (updatedVisit as any).hijriDate || null;
       if (updatedVisit.tasks) backendData.duties = updatedVisit.tasks.join(', ');
       if (updatedVisit.status) backendData.status = updatedVisit.status;
       if (updatedVisit.postponeReason) backendData.notes = updatedVisit.postponeReason;
+      if (updatedVisit.report !== undefined) backendData.report = updatedVisit.report;
       if (updatedVisit.infectionControl?.complianceLevel) backendData.review_points = updatedVisit.infectionControl.complianceLevel;
       if (updatedVisit.infectionControl?.notes) backendData.notes = updatedVisit.infectionControl.notes;
 
@@ -399,12 +402,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const updated = await swapRequestApi.update(parseInt(id), backendData);
       const transformed = transformSwapRequest(updated);
       setSwapRequests(prev => prev.map(sr => sr.id === id ? transformed : sr));
-      
+
       // If the swap request was approved, refresh visits data to reflect the assignment change
       if (updatedSwapRequest.status === 'approved') {
         await loadData();
       }
-      
+
       toast.success('Swap request updated successfully');
     } catch (err: any) {
       toast.error(err.message || 'Failed to update swap request');

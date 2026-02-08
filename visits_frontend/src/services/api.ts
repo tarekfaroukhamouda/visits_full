@@ -30,7 +30,7 @@ export const excelUploadApi = {
   },
 };
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://38.247.128.186:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 // Types
 export interface ApiResponse<T> {
@@ -55,12 +55,12 @@ const getHeaders = (): HeadersInit => {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
-  
+
   const token = getAuthToken();
   if (token) {
     headers['x-access-tokens'] = token;
   }
-  
+
   return headers;
 };
 
@@ -201,6 +201,32 @@ export const swapRequestApi = {
   delete: (id: number) => apiRequest<{ success: boolean }>(`/swap-requests/${id}`, { method: 'DELETE' }),
 };
 
+// Task API
+export interface Task {
+  id: number;
+  title: string;
+  description?: string;
+  status: 'pending' | 'completed';
+  priority?: 'low' | 'normal' | 'high';
+  assigned_to_id?: number;
+  created_by_id?: number;
+  created_at: string;
+  due_date?: string;
+}
+
+export const taskApi = {
+  getAll: (type: 'assigned' | 'created' | 'all' = 'assigned') => apiRequest<Task[]>(`/tasks/?type=${type}`),
+  create: (data: any) => apiRequest<Task>('/tasks/', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  update: (id: number, data: any) => apiRequest<Task>(`/tasks/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  delete: (id: number) => apiRequest<{ success: boolean }>(`/tasks/${id}`, { method: 'DELETE' }),
+};
+
 // Notifications API
 export const notificationsApi = {
   getUnseen: (doctorId: number) => apiRequest<any[]>(`/notifications/unseen/?doctor_id=${doctorId}`),
@@ -221,11 +247,13 @@ export const transformVisit = (backendVisit: any): any => {
     type: backendVisit.location?.type || 'government',
     location: backendVisit.location?.inside ? 'inside-taif' : 'outside-taif',
     scheduledDate: backendVisit.date || '',
+    endDate: backendVisit.end_date || undefined,
     hijriDate: backendVisit.hijri_date || undefined,
     actualDate: backendVisit.date || '',
     status: backendVisit.status || 'scheduled',
     assignedEmployees: backendVisit.doctors?.map((vd: any) => vd.doctor?.id?.toString() || '') || [],
     postponeReason: backendVisit.notes || undefined,
+    report: backendVisit.report || undefined,
     programId: backendVisit.program_id?.toString() || undefined,
     tasks: backendVisit.duties ? [backendVisit.duties] : undefined,
     infectionControl: backendVisit.review_points ? {

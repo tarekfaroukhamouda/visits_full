@@ -12,11 +12,12 @@ interface EditVisitModalProps {
 
 export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
   const { updateVisit, employees, visits } = useData();
-  
+
   const [formData, setFormData] = useState({
     name: visit.name,
     type: visit.type,
     scheduledDate: visit.scheduledDate,
+    endDate: visit.endDate || '',
     actualDate: visit.actualDate || '',
     status: visit.status,
     assignedEmployees: visit.assignedEmployees,
@@ -40,7 +41,7 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
   useEffect(() => {
     if (formData.scheduledDate) {
       const conflicts = new Map<string, any>();
-      
+
       employees.forEach(employee => {
         const conflict = checkEmployeeAvailability(
           employee.id,
@@ -51,7 +52,7 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
         );
         conflicts.set(employee.id, conflict);
       });
-      
+
       setEmployeeConflicts(conflicts);
     } else {
       setEmployeeConflicts(new Map());
@@ -60,7 +61,7 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.scheduledDate || formData.assignedEmployees.length === 0) {
       toast.error('الرجاء ملء جميع الحقول المطلوبة');
       return;
@@ -70,6 +71,7 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
       name: formData.name,
       type: formData.type,
       scheduledDate: formData.scheduledDate,
+      endDate: formData.endDate || undefined,
       actualDate: formData.actualDate || undefined,
       status: formData.status,
       assignedEmployees: formData.assignedEmployees,
@@ -146,7 +148,7 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
           {/* Basic Information */}
           <div className="space-y-4">
             <h3 className="text-gray-900 pb-2 border-b border-gray-200">المعلومات الأساسية</h3>
-            
+
             <div>
               <label className="block text-gray-700 mb-2">
                 اسم المنشأة <span className="text-red-500">*</span>
@@ -210,6 +212,19 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
 
               <div>
                 <label className="block text-gray-700 mb-2">
+                  تاريخ النهاية
+                </label>
+                <input
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                  min={formData.scheduledDate}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 mb-2">
                   التاريخ الفعلي
                 </label>
                 <input
@@ -240,7 +255,7 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
           {/* Assigned Employees */}
           <div className="space-y-4">
             <h3 className="text-gray-900 pb-2 border-b border-gray-200">الموظفين المكلفين</h3>
-            
+
             <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-4">
               {employees && employees.length > 0 ? employees.map(employee => {
                 const conflict = employeeConflicts.get(employee.id);
@@ -249,15 +264,14 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
                 const isDisabled = hasConflict && !isCurrentlyAssigned;
 
                 return (
-                  <label 
-                    key={employee.id} 
-                    className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
-                      hasConflict && !isCurrentlyAssigned
-                        ? 'bg-red-50 border-2 border-red-200 opacity-60' 
-                        : isCurrentlyAssigned
+                  <label
+                    key={employee.id}
+                    className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${hasConflict && !isCurrentlyAssigned
+                      ? 'bg-red-50 border-2 border-red-200 opacity-60'
+                      : isCurrentlyAssigned
                         ? 'bg-blue-50 border-2 border-blue-200'
                         : 'hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     <input
                       type="checkbox"
@@ -285,7 +299,7 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
                         <div className="flex items-center gap-2 mt-1 text-xs text-red-600">
                           <AlertTriangle className="w-3 h-3" />
                           <span>
-                            {conflict.conflictType === 'vacation' 
+                            {conflict.conflictType === 'vacation'
                               ? 'الموظف في إجازة'
                               : 'الموظف لديه زيارة أخرى'}
                           </span>
@@ -411,7 +425,7 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
             >
               إلغاء
             </button>
-            
+
             <button
               type="submit"
               className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

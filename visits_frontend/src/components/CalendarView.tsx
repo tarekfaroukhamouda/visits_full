@@ -16,7 +16,7 @@ interface CalendarViewProps {
 export function CalendarView({ userRole }: CalendarViewProps) {
   const { t, language, dir } = useLanguage();
   const { visits, programs, facilities, deleteVisit } = useData();
-  
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -33,7 +33,7 @@ export function CalendarView({ userRole }: CalendarViewProps) {
   const startingDayOfWeek = firstDay.getDay();
 
   // Month names
-  const monthNames = language === 'ar' 
+  const monthNames = language === 'ar'
     ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
     : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -111,7 +111,7 @@ export function CalendarView({ userRole }: CalendarViewProps) {
   // Render calendar grid
   const renderCalendarDays = () => {
     const days = [];
-    
+
     // Empty cells before first day
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(
@@ -127,14 +127,13 @@ export function CalendarView({ userRole }: CalendarViewProps) {
       days.push(
         <div
           key={day}
-          className={`min-h-[120px] border border-gray-200 dark:border-gray-700 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${
-            isToday ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-white dark:bg-gray-900'
-          }`}
+          className={`min-h-[120px] border border-gray-200 dark:border-gray-700 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${isToday ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-white dark:bg-gray-900'
+            }`}
         >
           <div className={`text-sm font-medium mb-2 ${isToday ? 'text-[#1565C0]' : 'text-gray-700 dark:text-gray-300'}`}>
             {day}
           </div>
-          
+
           <div className="space-y-1.5">
             {dayVisits.slice(0, 3).map((visit) => {
               const program = programs.find(p => p.id === visit.programId);
@@ -179,20 +178,22 @@ export function CalendarView({ userRole }: CalendarViewProps) {
                     </div>
                   )}
 
-                  {/* Delete button */}
-                  <div className="flex justify-end mt-2">
-                    <button
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleDelete(visit);
-                      }}
-                      className="flex items-center gap-1 px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded transition-colors"
-                      title={t('delete')}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      {t('delete')}
-                    </button>
-                  </div>
+                  {/* Delete button - Only for Admin (0) and Manager (2) */}
+                  {userRole !== 1 && (
+                    <div className="flex justify-end mt-2">
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleDelete(visit);
+                        }}
+                        className="flex items-center gap-1 px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title={t('delete')}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        {t('delete')}
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -231,18 +232,18 @@ export function CalendarView({ userRole }: CalendarViewProps) {
             <CalendarIcon className="w-4 h-4 mr-2" />
             {t('today')}
           </Button>
-          
+
           <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg border p-1">
             <Button onClick={previousMonth} variant="ghost" size="sm">
               {dir === 'rtl' ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </Button>
-            
+
             <div className="px-4 text-center min-w-[180px]">
               <p className="font-semibold">
                 {monthNames[month]} {year}
               </p>
             </div>
-            
+
             <Button onClick={nextMonth} variant="ghost" size="sm">
               {dir === 'rtl' ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
             </Button>

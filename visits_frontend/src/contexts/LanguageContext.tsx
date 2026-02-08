@@ -81,6 +81,7 @@ const translations: Record<Language, Record<string, string>> = {
     'my_report': 'تقاريري',
     'doctor': 'طبيب / موظف',
     'main_menu': 'القائمة الرئيسية',
+    'calendar': 'التقويم',
 
     // Dashboard
     'total_visits': 'إجمالي الزيارات',
@@ -142,6 +143,8 @@ const translations: Record<Language, Record<string, string>> = {
     'facility_name': 'اسم المنشأة',
     'facility_name_placeholder': 'مثال: مستشفى الملك فيصل التخصصي',
     'actual_date': 'التاريخ الفعلي',
+    'end_date': 'تاريخ النهاية',
+    'end_date_error': 'تاريخ النهاية يجب أن يكون بعد تاريخ البداية',
     'postpone_reason_label': 'سبب التأجيل',
     'postpone_reason_placeholder': 'اكتب سبب التأجيل...',
     'assigned_employees': 'الموظفين المكلفين',
@@ -209,7 +212,7 @@ const translations: Record<Language, Record<string, string>> = {
     'outside_taif': 'خارج الطائف',
     'location': 'الموقع',
     'all_locations': 'جميع المواقع',
-    
+
     // Programs
     'programs_management': 'إدارة البرامج',
     'programs_subtitle': 'إدارة ومتابعة البرامج والزيارات',
@@ -227,7 +230,7 @@ const translations: Record<Language, Record<string, string>> = {
     'program_added': '✅ تم إضافة البرنامج بنجاح',
     'program_updated': '✅ تم تحديث البرنامج بنجاح',
     'program_deleted': '✅ تم حذف البرنامج بنجاح',
-    
+
     // Facilities
     'facilities_management': 'إدارة المنشآت',
     'facilities_subtitle': 'إدارة وتصنيف المنشآت الصحية',
@@ -236,7 +239,7 @@ const translations: Record<Language, Record<string, string>> = {
     'facility_updated': '✅ تم تحديث المنشأة بنجاح',
     'facility_deleted': '✅ تم حذف المنشأة بنجاح',
     'no_facilities': 'لا توجد منشآت',
-    
+
     // Employee Performance
     'employee_performance': 'تقارير أداء الموظفين',
     'performance_subtitle': 'تحليل أداء الموظفين والإنجازات',
@@ -269,7 +272,7 @@ const translations: Record<Language, Record<string, string>> = {
     'employee_on_vacation': '⚠️ الموظف في إجازة خلال هذه الفترة',
     'employee_has_conflict': '⚠️ الموظف لديه زيارة أخرى في نفس التاريخ',
     'employee_unavailable': '⚠️ الموظف غير متاح في هذا التاريخ',
-    
+
     // Swap Requests
     'swap_visit': 'تبديل الزيارة',
     'swap_request': 'طلب تبديل',
@@ -279,8 +282,44 @@ const translations: Record<Language, Record<string, string>> = {
     'swap_approved': '✅ تم قبول طلب التبديل',
     'swap_rejected': '❌ تم رفض طلب التبديل',
     'pending_swaps': 'طلبات التبديل المعلقة',
-    'swap_requests': 'طلبات التبديل',
-    
+    'swap_requests': 'طلبات التبادل',
+
+    // Tasks Feature
+    'tasks': 'المهام',
+    'add_task': 'إضافة مهمة',
+    'tasks_description': 'إدارة وتتبع المهام الخاصة بك ومهام الفريق',
+    'task_title': 'عنوان المهمة',
+    'task_description': 'الوصف',
+    'priority': 'الأولوية',
+    'due_date': 'تاريخ الاستحقاق',
+    'assigned_to': 'معينة إلى',
+    'select_employee': 'اختر موظف',
+    'create_task': 'إنشاء مهمة جديدة',
+    'edit_task': 'تعديل المهمة',
+    'delete_task_confirm': 'هل أنت متأكد من حذف هذه المهمة؟',
+    'mark_completed': 'تحديد كمكتملة',
+    'mark_pending': 'تحديد كقيد الانتظار',
+    'my_tasks': 'مهامي',
+    'created_by_me': 'أنشأتها',
+    'created_by': 'تم الإنشاء بواسطة',
+    'all_tasks': 'كل المهام',
+    'low': 'منخفضة',
+    'normal': 'متوسطة',
+    'high': 'عالية',
+    'no_tasks_found': 'لا توجد مهام',
+    'task_added': '✅ تم إضافة المهمة بنجاح',
+    'task_updated': '✅ تم تحديث المهمة بنجاح',
+    'task_deleted': '✅ تم حذف المهمة بنجاح',
+    'required_fields': 'يرجى تعبئة جميع الحقول المطلوبة',
+    'task_placeholder': 'أدخل عنوان المهمة',
+    'search_placeholder': 'بحث عن مهمة...',
+    'all_statuses': 'كل الحالات',
+    'status_completed': 'مكتملة',
+    'error_fetching_tasks': 'فشل في جلب المهام',
+    'error_updating_task': 'فشل في تحديث المهمة',
+    'error_deleting_task': 'فشل في حذف المهمة',
+    'error_creating_task': 'فشل في إنشاء المهمة',
+
     // Tasks & Corrective Plans
     'tasks': 'المهام',
     'add_task': 'إضافة مهمة',
@@ -297,7 +336,7 @@ const translations: Record<Language, Record<string, string>> = {
     'images': 'الصور والشواهد',
     'approve_plan': 'اعتماد الخطة',
     'review_plan': 'تحت المراجعة',
-    
+
     // Employee History
     'employee_history': 'سجل الموظف',
     'previous_visits': 'الزيارات السابقة',
@@ -306,7 +345,7 @@ const translations: Record<Language, Record<string, string>> = {
     'total_completed': 'إجمالي المنجزة',
     'total_upcoming': 'إجمالي القادمة',
     'reviewed_by': 'تمت المراجعة بواسطة',
-    
+
     // Excel Upload
     'excel_upload_visits': 'استيراد الزيارات من Excel',
     'excel_upload_subtitle': 'رفع ملف Excel لجدولة الزيارات بشكل جماعي',
@@ -334,11 +373,21 @@ const translations: Record<Language, Record<string, string>> = {
     'visits_import_failed': '❌ فشل استيراد بعض الزيارات',
     'template_downloaded': '✅ تم تحميل النموذج بنجاح',
     'excel_upload': 'Excel Upload',
-    
+
     // Calendar View
     'calendar_view_subtitle': 'عرض وإدارة الزيارات في التقويم',
     'today': 'اليوم',
-    'more': 'المزيد'
+    'more': 'المزيد',
+
+    // Close Visit
+    'close_visit': 'إغلاق الزيارة',
+    'close_visit_confirm': 'تأكيد إغلاق الزيارة',
+    'visit_closed_success': 'تم إغلاق الزيارة بنجاح',
+    'visit_report': 'تقرير الزيارة',
+    'write_report_placeholder': 'اكتب تقرير الزيارة هنا...',
+    'submit_report': 'إرسال التقرير',
+    'cancel': 'إلغاء',
+    'status_completed': 'مكتملة',
   },
   en: {
     // Header
@@ -373,6 +422,7 @@ const translations: Record<Language, Record<string, string>> = {
     'my_report': 'My Report',
     'doctor': 'Doctor / Employee',
     'main_menu': 'Main Menu',
+    'calendar': 'Calendar',
 
     // Dashboard
     'total_visits': 'Total Visits',
@@ -434,6 +484,8 @@ const translations: Record<Language, Record<string, string>> = {
     'facility_name': 'Facility Name',
     'facility_name_placeholder': 'e.g., King Faisal Specialist Hospital',
     'actual_date': 'Actual Date',
+    'end_date': 'End Date',
+    'end_date_error': 'End date must be after start date',
     'postpone_reason_label': 'Postpone Reason',
     'postpone_reason_placeholder': 'Enter postpone reason...',
     'assigned_employees': 'Assigned Employees',
@@ -501,7 +553,7 @@ const translations: Record<Language, Record<string, string>> = {
     'outside_taif': 'Outside Taif',
     'location': 'Location',
     'all_locations': 'All Locations',
-    
+
     // Programs
     'programs_management': 'Programs Management',
     'programs_subtitle': 'Manage and track programs and visits',
@@ -519,7 +571,7 @@ const translations: Record<Language, Record<string, string>> = {
     'program_added': '✅ Program added successfully',
     'program_updated': '✅ Program updated successfully',
     'program_deleted': '✅ Program deleted successfully',
-    
+
     // Facilities
     'facilities_management': 'Facilities Management',
     'facilities_subtitle': 'Manage and categorize health facilities',
@@ -528,7 +580,7 @@ const translations: Record<Language, Record<string, string>> = {
     'facility_updated': '✅ Facility updated successfully',
     'facility_deleted': '✅ Facility deleted successfully',
     'no_facilities': 'No facilities',
-    
+
     // Employee Performance
     'employee_performance': 'Employee Performance Reports',
     'performance_subtitle': 'Analyze employee performance and achievements',
@@ -561,7 +613,7 @@ const translations: Record<Language, Record<string, string>> = {
     'employee_on_vacation': '⚠️ Employee is on vacation during this period',
     'employee_has_conflict': '⚠️ Employee has another visit on the same date',
     'employee_unavailable': '⚠️ Employee is unavailable on this date',
-    
+
     // Swap Requests
     'swap_visit': 'Swap Visit',
     'swap_request': 'Swap Request',
@@ -572,7 +624,40 @@ const translations: Record<Language, Record<string, string>> = {
     'swap_rejected': '❌ Swap request rejected',
     'pending_swaps': 'Pending Swap Requests',
     'swap_requests': 'Swap Requests',
-    
+
+    'tasks_description': 'Manage and track your tasks and team tasks',
+    'task_title': 'Task Title',
+    'task_description': 'Description',
+    'priority': 'Priority',
+    'due_date': 'Due Date',
+    'assigned_to': 'Assigned To',
+    'select_employee': 'Select Employee',
+    'create_task': 'Create New Task',
+    'edit_task': 'Edit Task',
+    'delete_task_confirm': 'Are you sure you want to delete this task?',
+    'mark_completed': 'Mark as Completed',
+    'mark_pending': 'Mark as Pending',
+    'my_tasks': 'My Tasks',
+    'created_by_me': 'Created by Me',
+    'created_by': 'Created By',
+    'all_tasks': 'All Tasks',
+    'low': 'Low',
+    'normal': 'Normal',
+    'high': 'High',
+    'no_tasks_found': 'No tasks found',
+    'task_added': '✅ Task added successfully',
+    'task_updated': '✅ Task updated successfully',
+    'task_deleted': '✅ Task deleted successfully',
+    'required_fields': 'Please fill all required fields',
+    'task_placeholder': 'Enter task title',
+    'search_placeholder': 'Search tasks...',
+    'all_statuses': 'All Statuses',
+    'status_completed': 'Completed',
+    'error_fetching_tasks': 'Failed to fetch tasks',
+    'error_updating_task': 'Failed to update task',
+    'error_deleting_task': 'Failed to delete task',
+    'error_creating_task': 'Failed to create task',
+
     // Tasks & Corrective Plans
     'tasks': 'Tasks',
     'add_task': 'Add Task',
@@ -589,7 +674,7 @@ const translations: Record<Language, Record<string, string>> = {
     'images': 'Images & Evidence',
     'approve_plan': 'Approve Plan',
     'review_plan': 'Under Review',
-    
+
     // Employee History
     'employee_history': 'Employee History',
     'previous_visits': 'Previous Visits',
@@ -598,7 +683,7 @@ const translations: Record<Language, Record<string, string>> = {
     'total_completed': 'Total Completed',
     'total_upcoming': 'Total Upcoming',
     'reviewed_by': 'Reviewed By',
-    
+
     // Excel Upload
     'excel_upload_visits': 'Import Visits from Excel',
     'excel_upload_subtitle': 'Upload Excel file to schedule visits in bulk',
@@ -626,10 +711,20 @@ const translations: Record<Language, Record<string, string>> = {
     'visits_import_failed': '❌ Failed to import some visits',
     'template_downloaded': '✅ Template downloaded successfully',
     'excel_upload': 'Excel Upload',
-    
+
     // Calendar View
     'calendar_view_subtitle': 'View and manage visits on calendar',
     'today': 'Today',
-    'more': 'More'
+    'more': 'More',
+
+    // Close Visit
+    'close_visit': 'Close Visit',
+    'close_visit_confirm': 'Confirm Close Visit',
+    'visit_closed_success': 'Visit closed successfully',
+    'visit_report': 'Visit Report',
+    'write_report_placeholder': 'Write visit report here...',
+    'submit_report': 'Submit Report',
+    'cancel': 'Cancel',
+    'status_completed': 'Completed',
   }
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Save, Plus, X, AlertTriangle, FileText } from 'lucide-react';
@@ -9,12 +9,13 @@ import { FileUpload } from './FileUpload';
 export function AddVisitForm() {
   const { addVisit, employees, visits, facilities, programs } = useData();
   const { t, language } = useLanguage();
-  
+
   const [formData, setFormData] = useState({
     facilityId: '',
     type: 'government' as 'government' | 'private',
     location: 'inside-taif' as 'inside-taif' | 'outside-taif',
     scheduledDate: '',
+    endDate: '',
     dateType: 'gregorian' as 'gregorian' | 'hijri',
     hijriDate: '',
     status: 'scheduled' as 'scheduled' | 'unscheduled',
@@ -55,7 +56,7 @@ export function AddVisitForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validation
     if (!formData.facilityId || formData.assignedEmployees.length === 0) {
       toast.error(t('required_fields'));
@@ -67,26 +68,31 @@ export function AddVisitForm() {
       return;
     }
 
+    if (formData.endDate && formData.scheduledDate && new Date(formData.endDate) < new Date(formData.scheduledDate)) {
+      toast.error(t('end_date_error'));
+      return;
+    }
+
     if (formData.dateType === 'hijri' && !formData.hijriDate) {
       toast.error(t('required_fields'));
       return;
     }
 
     // Check for conflicts
-    const hasConflicts = Array.from(employeeConflicts.values()).some(check => check.hasConflict);
+    const hasConflicts = Array.from(employeeConflicts.values()).some((check: any) => check.hasConflict);
     if (hasConflicts) {
       toast.error(t('employee_unavailable'));
       return;
     }
 
-    if (formData.infectionControl.enabled && 
-        formData.infectionControl.checklistItems.filter(item => item.trim()).length === 0) {
+    if (formData.infectionControl.enabled &&
+      formData.infectionControl.checklistItems.filter(item => item.trim()).length === 0) {
       toast.error(t('checklist_required'));
       return;
     }
 
-    const facility = facilities.find(f => f.id === formData.facilityId);
-    const doctorIds = formData.assignedEmployees.map(id => parseInt(id));
+    const facility = facilities.find((f: any) => f.id === formData.facilityId);
+    const doctorIds = formData.assignedEmployees.map((id: string) => parseInt(id));
 
     // Create visit object
     const newVisit = {
@@ -95,14 +101,15 @@ export function AddVisitForm() {
       type: formData.type,
       location: formData.location,
       scheduledDate: formData.scheduledDate || undefined,
+      endDate: formData.endDate || undefined,
       hijriDate: formData.hijriDate || undefined,
       status: formData.status,
       assignedEmployees: formData.assignedEmployees,
       programId: formData.programId || undefined,
-      tasks: formData.tasks.filter(task => task.trim()),
+      tasks: formData.tasks.filter((task: string) => task.trim()),
       ...(formData.infectionControl.enabled && {
         infectionControl: {
-          checklistItems: formData.infectionControl.checklistItems.filter(item => item.trim()),
+          checklistItems: formData.infectionControl.checklistItems.filter((item: string) => item.trim()),
           complianceLevel: formData.infectionControl.complianceLevel,
           notes: formData.infectionControl.notes
         }
@@ -136,6 +143,7 @@ export function AddVisitForm() {
       type: 'government',
       location: 'inside-taif',
       scheduledDate: '',
+      endDate: '',
       status: 'scheduled',
       assignedEmployees: [],
       programId: '',
@@ -224,7 +232,7 @@ export function AddVisitForm() {
         {/* Basic Information */}
         <div className="space-y-4">
           <h3 className="text-gray-900 font-semibold pb-2 border-b border-gray-200">{t('basic_info')}</h3>
-          
+
           <div>
             <label className="block text-gray-700 mb-2">
               {t('facility_name')} <span className="text-red-500">*</span>
@@ -346,6 +354,24 @@ export function AddVisitForm() {
               )}
             </div>
 
+
+
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('end_date')}
+              </label>
+              <input
+                type="date"
+                value={formData.endDate}
+                onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                min={formData.scheduledDate}
+                disabled={!formData.scheduledDate}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl input-enhanced focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-gray-700 mb-2">
                 {t('program_name')}
@@ -369,7 +395,7 @@ export function AddVisitForm() {
         {/* Assigned Employees with Conflict Checking */}
         <div className="space-y-4">
           <h3 className="text-gray-900 font-semibold pb-2 border-b border-gray-200">{t('assigned_employees')}</h3>
-          
+
           <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-xl p-4 bg-white/50">
             {(employees && employees.length > 0 ? getAvailableEmployees(formData.scheduledDate, visits, employees) : []).map(employee => {
               const isSelected = formData.assignedEmployees.includes(employee.id);
@@ -377,11 +403,10 @@ export function AddVisitForm() {
               return (
                 <label
                   key={employee.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
-                    isSelected 
-                      ? 'bg-blue-50 border-2 border-blue-200 shadow-soft' 
-                      : 'hover:bg-gray-50'
-                  }`}
+                  className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors ${isSelected
+                    ? 'bg-blue-50 border-2 border-blue-200 shadow-soft'
+                    : 'hover:bg-gray-50'
+                    }`}
                 >
                   <input
                     type="checkbox"
@@ -572,10 +597,10 @@ export function AddVisitForm() {
                       {formData.infectionControl.checklistItems.length > 1 && (
                         <button
                           type="button"
-                        onClick={() => removeChecklistItem(index)}
-                        className="px-3 py-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                      >
-                        <X className="w-5 h-5" />
+                          onClick={() => removeChecklistItem(index)}
+                          className="px-3 py-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                        >
+                          <X className="w-5 h-5" />
                         </button>
                       )}
                     </div>
@@ -643,7 +668,7 @@ export function AddVisitForm() {
           >
             {t('cancel')}
           </button>
-          
+
           <button
             type="submit"
             className="flex items-center gap-2 px-6 py-3 gradient-primary text-white rounded-xl shadow-soft hover:opacity-90 transition-opacity"
@@ -652,7 +677,7 @@ export function AddVisitForm() {
             <span>{t('save')}</span>
           </button>
         </div>
-      </form>
-    </div>
+      </form >
+    </div >
   );
 }
