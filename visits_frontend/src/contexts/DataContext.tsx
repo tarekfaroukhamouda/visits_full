@@ -123,12 +123,14 @@ export function DataProvider({ children }: { children: ReactNode }) {
         status: visit.status || 'scheduled',
         notes: visit.postponeReason || visit.infectionControl?.notes || null,
         review_points: visit.infectionControl?.complianceLevel || null,
+        files: visit.infectionControl?.checklistItems || null,
       };
 
       const newVisit = await visitApi.create(backendData, doctorIds);
       const transformed = transformVisit(newVisit);
       setVisits(prev => [transformed, ...prev]);
       toast.success('Visit added successfully');
+      return transformed;
     } catch (err: any) {
       toast.error(err.message || 'Failed to add visit');
       throw err;
@@ -149,11 +151,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
       if (updatedVisit.report !== undefined) backendData.report = updatedVisit.report;
       if (updatedVisit.infectionControl?.complianceLevel) backendData.review_points = updatedVisit.infectionControl.complianceLevel;
       if (updatedVisit.infectionControl?.notes) backendData.notes = updatedVisit.infectionControl.notes;
+      if (updatedVisit.infectionControl?.checklistItems) backendData.files = updatedVisit.infectionControl.checklistItems;
 
       const updated = await visitApi.update(parseInt(id), backendData, doctorIds);
       const transformed = transformVisit(updated);
       setVisits(prev => prev.map(v => v.id === id ? transformed : v));
       toast.success('Visit updated successfully');
+      return transformed;
     } catch (err: any) {
       toast.error(err.message || 'Failed to update visit');
       throw err;
@@ -187,6 +191,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const transformed = transformEmployee(newEmployee);
       setEmployees(prev => [...prev, transformed]);
       toast.success('Employee added successfully');
+      return transformed;
     } catch (err: any) {
       toast.error(err.message || 'Failed to add employee');
       throw err;
@@ -206,6 +211,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const transformed = transformEmployee(updated);
       setEmployees(prev => prev.map(e => e.id === id ? transformed : e));
       toast.success('Employee updated successfully');
+      return transformed;
     } catch (err: any) {
       toast.error(err.message || 'Failed to update employee');
       throw err;
@@ -237,6 +243,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const transformed = transformFacility(newFacility);
       setFacilities(prev => [...prev, transformed]);
       toast.success('Facility added successfully');
+      return transformed;
     } catch (err: any) {
       toast.error(err.message || 'Failed to add facility');
       throw err;
@@ -255,6 +262,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const transformed = transformFacility(updated);
       setFacilities(prev => prev.map(f => f.id === id ? transformed : f));
       toast.success('Facility updated successfully');
+      return transformed;
     } catch (err: any) {
       toast.error(err.message || 'Failed to update facility');
       throw err;
@@ -285,6 +293,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const transformed = transformProgram(newProgram);
       setPrograms(prev => [...prev, transformed]);
       toast.success('Program added successfully');
+      return transformed;
     } catch (err: any) {
       toast.error(err.message || 'Failed to add program');
       throw err;
@@ -302,6 +311,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const transformed = transformProgram(updated);
       setPrograms(prev => prev.map(p => p.id === id ? transformed : p));
       toast.success('Program updated successfully');
+      return transformed;
     } catch (err: any) {
       toast.error(err.message || 'Failed to update program');
       throw err;

@@ -12,9 +12,10 @@ import type { Visit } from '../App';
 
 interface MyVisitsProps {
   userId: string;
+  userRole?: number;
 }
 
-export function MyVisits({ userId }: MyVisitsProps) {
+export function MyVisits({ userId, userRole }: MyVisitsProps) {
   const { t, language } = useLanguage();
   const formatDate = useFormatDate();
   const { visits, employees, facilities, programs } = useData();
@@ -27,8 +28,9 @@ export function MyVisits({ userId }: MyVisitsProps) {
   const currentEmployee = employees.find((emp) => emp.id === userId);
 
   const myVisits = useMemo(() => {
+    if (userRole === 0 || userRole === 2) return visits;
     return visits.filter((visit) => visit.assignedEmployees.includes(userId));
-  }, [visits, userId]);
+  }, [visits, userId, userRole]);
 
   const filteredVisits = useMemo(() => {
     return myVisits.filter((visit) => {
@@ -90,9 +92,11 @@ export function MyVisits({ userId }: MyVisitsProps) {
               {t('my_visits')}
             </h1>
             <p className="text-sm text-gray-600">
-              {language === 'ar'
-                ? `الزيارات المكلف بها - ${currentEmployee?.name ?? ''}`
-                : `Assigned Visits - ${currentEmployee?.name ?? ''}`}
+              {userRole === 0 || userRole === 2
+                ? (language === 'ar' ? 'جميع الزيارات المسجلة' : 'All registered visits')
+                : (language === 'ar'
+                  ? `الزيارات المكلف بها - ${currentEmployee?.name ?? ''}`
+                  : `Assigned Visits - ${currentEmployee?.name ?? ''}`)}
             </p>
           </div>
         </div>

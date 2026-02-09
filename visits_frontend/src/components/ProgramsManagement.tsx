@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Layers, Plus, Edit2, Trash2, CheckCircle, Clock, FileText, GraduationCap } from 'lucide-react';
+import { Layers, Plus, Edit2, Trash2, CheckCircle, Clock, FileText, GraduationCap, Upload } from 'lucide-react';
+import { programApi } from '../services/api';
 import { toast } from 'sonner@2.0.3';
 import { Program } from '../App';
 
 export function ProgramsManagement() {
-  const { programs, addProgram, updateProgram, deleteProgram, visits } = useData();
+  const { programs, addProgram, updateProgram, deleteProgram, visits, refreshData } = useData();
   const { t, language } = useLanguage();
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
+  const [iconFile, setIconFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const [formData, setFormData] = useState<Omit<Program, 'id'>>({
     name: '',
@@ -23,24 +26,38 @@ export function ProgramsManagement() {
     trainingSessions: 0
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim() || !formData.nameEn.trim()) {
       toast.error(t('required_fields'));
       return;
     }
 
-    if (editingProgram) {
-      updateProgram(editingProgram.id, formData);
-      toast.success(t('program_updated'));
-      setEditingProgram(null);
-    } else {
-      addProgram(formData);
-      toast.success(t('program_added'));
-    }
+    try {
+      setIsUploading(true);
+      let programId = '';
 
-    resetForm();
+      if (editingProgram) {
+        await updateProgram(editingProgram.id, formData);
+        programId = editingProgram.id;
+      } else {
+        const newProgram = await addProgram(formData);
+        programId = newProgram.id;
+      }
+
+      if (iconFile && programId) {
+        await programApi.uploadIcon(parseInt(programId), iconFile);
+        toast.success(t('icon_uploaded'));
+        await refreshData();
+      }
+      resetForm();
+    } catch (error) {
+      console.error('Error saving program:', error);
+      toast.error(t('error_saving_program'));
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleEdit = (program: Program) => {
@@ -73,6 +90,7 @@ export function ProgramsManagement() {
       trainingSessions: 0
     });
     setEditingProgram(null);
+    setIconFile(null);
     setShowAddModal(false);
   };
 
@@ -86,6 +104,8 @@ export function ProgramsManagement() {
 
     return { completed, remaining, percentage };
   };
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
   return (
     <div className="space-y-6">
@@ -112,8 +132,16 @@ export function ProgramsManagement() {
             <div key={program.id} className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <Layers className="w-6 h-6 text-purple-600" />
+                  <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center overflow-hidden">
+                    {program.icon ? (
+                      <img
+                        src={`${API_BASE_URL}${program.icon}`}
+                        alt={program.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Layers className="w-6 h-6 text-purple-600" />
+                    )}
                   </div>
                   <div>
                     <h3 className="text-gray-900">{language === 'ar' ? program.name : program.nameEn}</h3>
@@ -306,19 +334,51 @@ export function ProgramsManagement() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  {t('program_icon')}
+                </label>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-dashed border-gray-300">
+                    {iconFile ? (
+                      <img src={URL.createObjectURL(iconFile)} alt="Preview" className="w-full h-full object-cover" />
+                    ) : editingProgram?.icon ? (
+                      <img src={`${API_BASE_URL}${editingProgram.icon}`} alt="Current" className="w-full h-full object-cover" />
+                    ) : (
+                      <Upload className="w-6 h-6 text-gray-400" />
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setIconFile(e.target.files?.[0] || null)}
+                    className="flex-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                </div>
+              </div>
+
               <div className="flex items-center gap-3 pt-4">
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="flex-1 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  disabled={isUploading}
+                  className="flex-1 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={isUploading}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  {t('save')}
+                  {isUploading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      {t('saving')}
+                    </>
+                  ) : (
+                    t('save')
+                  )}
                 </button>
               </div>
             </form>

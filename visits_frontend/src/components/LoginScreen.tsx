@@ -16,9 +16,10 @@ import { toast } from 'sonner@2.0.3';
 
 interface LoginScreenProps {
   onLogin: (user: User) => void;
+  onForgotPassword: () => void;
 }
 
-export function LoginScreen({ onLogin }: LoginScreenProps) {
+export function LoginScreen({ onLogin, onForgotPassword }: LoginScreenProps) {
   const { language, toggleLanguage, t, dir } = useLanguage();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -163,9 +164,8 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
         >
           <div className="glass-effect rounded-3xl shadow-medium p-8 border border-white/50 h-full flex flex-col justify-center">
             <div
-              className={`flex ${
-                dir === 'rtl' ? 'justify-start' : 'justify-end'
-              } mb-4`}
+              className={`flex ${dir === 'rtl' ? 'justify-start' : 'justify-end'
+                } mb-4`}
             >
               <button
                 onClick={toggleLanguage}
@@ -200,6 +200,16 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 className="w-full px-4 py-3 border rounded-xl"
                 required
               />
+
+              <div className={`flex ${dir === 'rtl' ? 'justify-start' : 'justify-end'}`}>
+                <button
+                  type="button"
+                  onClick={onForgotPassword}
+                  className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  {t('forgot_password_link')}
+                </button>
+              </div>
 
               {error && (
                 <div className="bg-red-50 text-red-700 p-3 rounded-xl flex gap-2">

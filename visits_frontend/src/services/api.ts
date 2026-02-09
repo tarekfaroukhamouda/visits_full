@@ -138,6 +138,14 @@ export const doctorApi = {
     method: 'POST',
     body: JSON.stringify({ identifier, password }),
   }),
+  forgotPassword: (email: string) => apiRequest<any>('/doctors/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  }),
+  resetPassword: (data: any) => apiRequest<any>('/doctors/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
 };
 
 // Location API
@@ -168,6 +176,21 @@ export const programApi = {
     body: JSON.stringify(data),
   }),
   delete: (id: number) => apiRequest<{ success: boolean }>(`/programs/${id}`, { method: 'DELETE' }),
+  uploadIcon: async (id: number, file: File): Promise<any> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/programs/${id}/upload-icon`, {
+      method: 'POST',
+      headers: token ? { 'x-access-tokens': token } : undefined,
+      body: formData,
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'An error occurred' }));
+      throw new Error(error.detail || error.message || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
 };
 
 // Vacation API
@@ -211,7 +234,9 @@ export interface Task {
   assigned_to_id?: number;
   created_by_id?: number;
   created_at: string;
+  completed_at?: string;
   due_date?: string;
+  report?: string;
 }
 
 export const taskApi = {
@@ -257,7 +282,7 @@ export const transformVisit = (backendVisit: any): any => {
     programId: backendVisit.program_id?.toString() || undefined,
     tasks: backendVisit.duties ? [backendVisit.duties] : undefined,
     infectionControl: backendVisit.review_points ? {
-      checklistItems: [],
+      checklistItems: Array.isArray(backendVisit.files) ? backendVisit.files : [],
       complianceLevel: backendVisit.review_points,
       notes: backendVisit.notes || '',
     } : undefined,
@@ -298,6 +323,7 @@ export const transformProgram = (backendProgram: any): any => {
       pending: 0,
     },
     trainingSessions: 0,
+    icon: backendProgram.icon || undefined,
   };
 };
 

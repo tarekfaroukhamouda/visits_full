@@ -5,6 +5,7 @@ import { Plus, CheckSquare, Clock, Calendar as CalendarIcon, User, Search, Filte
 import { toast } from 'sonner';
 import { taskApi, Task } from '../services/api';
 import { AddTaskModal } from './AddTaskModal';
+import { CloseTaskModal } from './CloseTaskModal';
 
 interface TasksManagementProps {
     user: {
@@ -21,7 +22,9 @@ export function TasksManagement({ user }: TasksManagementProps) {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isCloseModalOpen, setIsCloseModalOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
+    const [taskToClose, setTaskToClose] = useState<Task | null>(null);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');
@@ -50,9 +53,15 @@ export function TasksManagement({ user }: TasksManagementProps) {
     };
 
     const handleStatusChange = async (task: Task, newStatus: 'pending' | 'completed') => {
+        if (newStatus === 'completed') {
+            setTaskToClose(task);
+            setIsCloseModalOpen(true);
+            return;
+        }
+
         try {
             await taskApi.update(task.id, { ...task, status: newStatus });
-            setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus } : t));
+            setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus, completed_at: undefined, report: undefined } : t));
             toast.success(t('task_updated'));
         } catch (error) {
             toast.error(t('error_updating_task') || 'Failed to update task');
@@ -141,7 +150,7 @@ export function TasksManagement({ user }: TasksManagementProps) {
                         <div className="absolute bottom-[-5px] left-0 right-0 h-0.5 bg-blue-600 rounded-full" />
                     )}
                 </button>
-                {user.role === 0 && (
+                {(user.role === 0 || user.role === 2) && (
                     <button
                         onClick={() => setActiveTab('all-tasks')}
                         className={`px-4 py-2 font-medium text-sm whitespace-nowrap transition-colors relative ${activeTab === 'all-tasks' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
@@ -262,12 +271,26 @@ export function TasksManagement({ user }: TasksManagementProps) {
                                                 <span>{t('created_by')}: {getEmployeeName(task.created_by_id)}</span>
                                             </div>
                                         )}
+
+                                        {task.status === 'completed' && task.completed_at && (
+                                            <div className="flex items-center gap-1.5 text-emerald-600">
+                                                <CheckCircle2 className="w-4 h-4" />
+                                                <span>{t('task_completion_date')}: {new Date(task.completed_at).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                                            </div>
+                                        )}
                                     </div>
+
+                                    {task.report && (
+                                        <div className="mt-4 p-3 bg-white border border-gray-100 rounded-lg">
+                                            <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">{t('task_report')}</h4>
+                                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{task.report}</p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex flex-col gap-2">
                                     {/* Actions */}
-                                    {(task.created_by_id === user.id || user.role === 0) && (
+                                    {(task.created_by_id === user.id || user.role === 0 || user.role === 2) && (
                                         <>
                                             <button
                                                 onClick={() => {
@@ -307,6 +330,20 @@ export function TasksManagement({ user }: TasksManagementProps) {
                         fetchTasks();
                         setIsAddModalOpen(false);
                         setSelectedTask(undefined);
+                    }}
+                />
+            )}
+
+            {/* Close Task Modal */}
+            {isCloseModalOpen && taskToClose && (
+                <CloseTaskModal
+                    task={taskToClose}
+                    onClose={() => {
+                        setIsCloseModalOpen(false);
+                        setTaskToClose(null);
+                    }}
+                    onTaskClosed={() => {
+                        fetchTasks();
                     }}
                 />
             )}

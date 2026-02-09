@@ -3,6 +3,8 @@ import { CalendarView } from './components/CalendarView';
 import { AddVisitForm } from './components/AddVisitFormEnhanced';
 import { LoginScreen } from './components/LoginScreen';
 import { Header } from './components/Header';
+import { ForgotPassword } from './components/ForgotPassword';
+import { ResetPassword } from './components/ResetPassword';
 import { EmployeesManagement } from './components/EmployeesManagement';
 import { FacilitiesManagement } from './components/FacilitiesManagement';
 import { EmployeePerformance } from './components/EmployeePerformance';
@@ -90,6 +92,7 @@ export interface Program {
     pending: number;
   };
   trainingSessions?: number;
+  icon?: string;
 }
 
 export interface Visit {
@@ -118,17 +121,30 @@ export interface Visit {
 }
 
 type ViewType = 'dashboard' | 'visits' | 'add-visit' | 'employees' | 'facilities' | 'performance' | 'programs' | 'vacations' | 'swap-requests' | 'employee-history' | 'excel-upload' | 'my-visits' | 'my-report' | 'tasks';
+type GuestViewType = 'login' | 'forgot-password' | 'reset-password';
 
 function AppContent() {
   console.log('AppContent component rendering');
-  const { t, dir } = useLanguage();
+  const { t, dir, language } = useLanguage();
   const { refreshData } = useData();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
+  const [guestView, setGuestView] = useState<GuestViewType>('login');
+  const [resetToken, setResetToken] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Refresh data when user changes (login/load)
   useEffect(() => {
+    // Check for reset token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    if (token) {
+      setResetToken(token);
+      setGuestView('reset-password');
+      // Clear URL params without refreshing
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     if (currentUser) {
       refreshData();
     }
@@ -198,7 +214,23 @@ function AppContent() {
   }, [currentUser?.role]);
 
   if (!currentUser) {
-    return <LoginScreen onLogin={setCurrentUser} />;
+    if (guestView === 'forgot-password') {
+      return <ForgotPassword onBack={() => setGuestView('login')} />;
+    }
+    if (guestView === 'reset-password') {
+      return (
+        <ResetPassword
+          token={resetToken}
+          onSuccess={() => setGuestView('login')}
+        />
+      );
+    }
+    return (
+      <LoginScreen
+        onLogin={setCurrentUser}
+        onForgotPassword={() => setGuestView('forgot-password')}
+      />
+    );
   }
 
   const isDoctor = currentUser.role === 1;
@@ -311,7 +343,16 @@ function AppContent() {
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${currentView === 'visits' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'}`}>
                       <Calendar className={`w-5 h-5 ${currentView === 'visits' ? 'text-white' : 'text-green-600'}`} />
                     </div>
-                    <span className="font-medium text-sm">{t('visits_table')}</span>
+                    <span className="font-medium text-sm">{t('calendar') || 'التقويم'}</span>
+                  </button>
+                  <button
+                    onClick={() => { setCurrentView('my-visits'); setIsSidebarOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${currentView === 'my-visits' ? 'gradient-primary text-white shadow-soft' : 'text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${currentView === 'my-visits' ? 'bg-white/20' : 'bg-blue-50 group-hover:bg-blue-100'}`}>
+                      <FileText className={`w-5 h-5 ${currentView === 'my-visits' ? 'text-white' : 'text-blue-600'}`} />
+                    </div>
+                    <span className="font-medium text-sm">{language === 'ar' ? 'قائمة الزيارات' : 'Visits List'}</span>
                   </button>
                   <button
                     onClick={() => { setCurrentView('tasks'); setIsSidebarOpen(false); }}
@@ -387,7 +428,9 @@ function AppContent() {
 
           <div className="animate-fade-in">
             {currentView === 'dashboard' && !isDoctor && <Dashboard userRole={currentUser.role} />}
-            {(currentView === 'my-visits' || (isDoctor && currentView === 'dashboard')) && <MyVisits userId={currentUser.id} />}
+            {(currentView === 'my-visits' || (isDoctor && currentView === 'dashboard')) && (
+              <MyVisits userId={currentUser.id} userRole={currentUser.role} />
+            )}
             {currentView === 'visits' && <CalendarView userRole={currentUser.role} />}
             {currentView === 'add-visit' && <AddVisitForm />}
             {currentView === 'my-report' && <MyReport userId={currentUser.id} />}

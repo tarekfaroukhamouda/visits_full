@@ -4,7 +4,7 @@ import { Visit } from '../App';
 import { getEmployeeNames } from '../utils/dataHelpers';
 import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { X, Calendar, MapPin, Users, FileText, Download, CheckCircle, AlertTriangle, CheckSquare, Building2, AlertCircle } from 'lucide-react';
+import { X, Calendar, MapPin, Users, FileText, Download, CheckCircle, AlertTriangle, CheckSquare, Building2, AlertCircle, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { formatDate } from '../utils/dateUtils';
@@ -14,14 +14,19 @@ import { exportVisitToPdf } from '../utils/pdfReport';
 interface VisitDetailsModalProps {
   visit: Visit & { name?: string };
   onClose: () => void;
+  isOpen?: boolean;
+  onEdit?: () => void;
+  userRole?: number;
 }
 
-export function VisitDetailsModal({ visit, onClose }: VisitDetailsModalProps) {
+export function VisitDetailsModal({ visit, onClose, isOpen = true, onEdit, userRole }: VisitDetailsModalProps) {
   const { employees, updateVisit } = useData();
   const { t, language, dir } = useLanguage();
   const [isClosing, setIsClosing] = useState(false);
-  const [report, setReport] = useState('');
+  const [report, setReport] = useState(visit.report || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (!isOpen) return null;
 
   const displayName = visit.facilityName ?? visit.name ?? '';
 
@@ -80,21 +85,21 @@ export function VisitDetailsModal({ visit, onClose }: VisitDetailsModalProps) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-600 mb-1">نوع المنشأة</p>
-                <span className={`inline - block px - 3 py - 1 rounded - full text - sm ${visit.type === 'government'
+                <span className={`inline-block px-3 py-1 rounded-full text-sm ${visit.type === 'government'
                   ? 'bg-blue-100 text-blue-700'
                   : 'bg-purple-100 text-purple-700'
-                  } `}>
+                  }`}>
                   {visit.type === 'government' ? 'حكومي' : 'خاص'}
                 </span>
               </div>
 
               <div>
                 <p className="text-sm text-gray-600 mb-1">حالة الزيارة</p>
-                <span className={`inline - flex items - center gap - 1 px - 3 py - 1 rounded - full text - sm ${visit.status === 'completed' ? 'bg-green-100 text-green-700' :
+                <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${visit.status === 'completed' ? 'bg-green-100 text-green-700' :
                   visit.status === 'scheduled' ? 'bg-orange-100 text-orange-700' :
                     visit.status === 'postponed' ? 'bg-red-100 text-red-700' :
                       'bg-gray-100 text-gray-700'
-                  } `}>
+                  }`}>
                   {visit.status === 'completed' && <CheckCircle className="w-4 h-4" />}
                   {visit.status === 'postponed' && <AlertCircle className="w-4 h-4" />}
                   {visit.status === 'completed' ? 'مكتملة' :
@@ -179,11 +184,11 @@ export function VisitDetailsModal({ visit, onClose }: VisitDetailsModalProps) {
                 <div className="flex items-center gap-2">
                   <div className="w-32 bg-gray-200 rounded-full h-3">
                     <div
-                      className={`h - 3 rounded - full ${visit.infectionControl.complianceLevel >= 90 ? 'bg-green-500' :
+                      className={`h-3 rounded-full ${visit.infectionControl.complianceLevel >= 90 ? 'bg-green-500' :
                         visit.infectionControl.complianceLevel >= 75 ? 'bg-yellow-500' :
                           'bg-red-500'
-                        } `}
-                      style={{ width: `${visit.infectionControl.complianceLevel}% ` }}
+                        }`}
+                      style={{ width: `${visit.infectionControl.complianceLevel}%` }}
                     />
                   </div>
                   <span className="text-gray-900">
@@ -212,6 +217,18 @@ export function VisitDetailsModal({ visit, onClose }: VisitDetailsModalProps) {
               )}
             </div>
           )}
+          {/* Report Display for Completed Visits */}
+          {visit.status === 'completed' && visit.report && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <FileText className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-1" />
+                <div>
+                  <p className="text-emerald-900 font-semibold mb-1">{t('visit_report') || 'تقرير الزيارة'}</p>
+                  <p className="text-emerald-700 whitespace-pre-wrap">{visit.report}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -232,6 +249,16 @@ export function VisitDetailsModal({ visit, onClose }: VisitDetailsModalProps) {
               >
                 <CheckSquare className="w-5 h-5" />
                 <span>{t('close_visit')}</span>
+              </button>
+            )}
+
+            {onEdit && userRole !== 1 && (
+              <button
+                onClick={onEdit}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                <Edit className="w-5 h-5" />
+                <span>{t('edit') || 'تعديل'}</span>
               </button>
             )}
           </div>

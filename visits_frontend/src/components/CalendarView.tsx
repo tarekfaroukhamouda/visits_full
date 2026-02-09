@@ -15,7 +15,7 @@ interface CalendarViewProps {
 
 export function CalendarView({ userRole }: CalendarViewProps) {
   const { t, language, dir } = useLanguage();
-  const { visits, programs, facilities, deleteVisit } = useData();
+  const { visits, programs, facilities, employees, deleteVisit } = useData();
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
@@ -168,13 +168,20 @@ export function CalendarView({ userRole }: CalendarViewProps) {
                     </span>
                   </div>
 
-                  {/* Employees count */}
+                  {/* Assigned Employees */}
                   {visit.assignedEmployees.length > 0 && (
-                    <div className="flex items-center gap-1 mt-1">
-                      <Users className="w-3 h-3 text-gray-400" />
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                        {visit.assignedEmployees.length}
-                      </span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <Users className="w-3 h-3 text-gray-400 mt-1 flex-shrink-0" />
+                      <div className="flex flex-wrap gap-1">
+                        {visit.assignedEmployees.map(empId => {
+                          const emp = employees.find(e => e.id.toString() === empId.toString());
+                          return (
+                            <span key={empId} className="text-[10px] bg-gray-100 text-gray-600 px-1 rounded truncate max-w-[80px]">
+                              {emp ? emp.name : empId}
+                            </span>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
 
