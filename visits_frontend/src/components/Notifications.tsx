@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Bell, Check } from 'lucide-react';
 import { notificationsApi } from '../services/api';
 import { getAuthToken } from '../services/api';
+import { formatHijriDate } from '../utils/hijriUtils';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface NotificationItem {
   id: number;
@@ -12,6 +14,7 @@ interface NotificationItem {
 }
 
 export function Notifications({ doctorId: propDoctorId }: { doctorId?: number | string } ) {
+  const { language } = useLanguage();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [open, setOpen] = useState(false);
 
@@ -109,7 +112,7 @@ export function Notifications({ doctorId: propDoctorId }: { doctorId?: number | 
                 </div>
                 <div className="flex-1">
                   <div className="text-sm text-gray-800">{n.message}</div>
-                  <div className="text-xs text-gray-400 mt-1">{n.created_at ? new Date(n.created_at).toLocaleString() : ''}</div>
+                  <div className="text-xs text-gray-400 mt-1">{n.created_at ? formatHijriDate(new Date(n.created_at), language === 'ar' ? 'ar' : 'en', 'long') : ''}</div>
                 </div>
                 <div className="flex-shrink-0 ml-2">
                   <button onClick={() => markSeen(n.id)} className="text-green-600 hover:text-green-800 p-1 rounded" title="Mark seen">

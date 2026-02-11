@@ -5,6 +5,7 @@ import { Save, Plus, X, AlertTriangle, FileText } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { checkMultipleEmployeesAvailability, getAvailableEmployees } from '../utils/conflictChecker';
 import { FileUpload } from './FileUpload';
+import { fromHijri } from '../utils/hijriUtils';
 
 export function AddVisitForm() {
   const { addVisit, employees, visits, facilities, programs } = useData();
@@ -16,7 +17,7 @@ export function AddVisitForm() {
     location: 'inside-taif' as 'inside-taif' | 'outside-taif',
     scheduledDate: '',
     endDate: '',
-    dateType: 'gregorian' as 'gregorian' | 'hijri',
+    dateType: 'hijri' as 'gregorian' | 'hijri',
     hijriDate: '',
     status: 'scheduled' as 'scheduled' | 'unscheduled',
     assignedEmployees: [] as string[],
@@ -94,14 +95,33 @@ export function AddVisitForm() {
     const facility = facilities.find((f: any) => f.id === formData.facilityId);
     const doctorIds = formData.assignedEmployees.map((id: string) => parseInt(id));
 
+    // Convert Hijri date to Gregorian if needed
+    let scheduledDate = formData.scheduledDate;
+    let endDate = formData.endDate;
+    
+    if (formData.dateType === 'hijri' && formData.hijriDate) {
+      // Parse Hijri date (format: YYYY-MM-DD)
+      const parts = formData.hijriDate.split('-');
+      if (parts.length === 3) {
+        const hijriYear = parseInt(parts[0]);
+        const hijriMonth = parseInt(parts[1]);
+        const hijriDay = parseInt(parts[2]);
+        const gregorianDate = fromHijri(hijriYear, hijriMonth, hijriDay);
+        const year = gregorianDate.getFullYear();
+        const month = String(gregorianDate.getMonth() + 1).padStart(2, '0');
+        const day = String(gregorianDate.getDate()).padStart(2, '0');
+        scheduledDate = `${year}-${month}-${day}`;
+      }
+    }
+
     // Create visit object
     const newVisit = {
       facilityId: formData.facilityId,
       facilityName: facility?.name,
       type: formData.type,
       location: formData.location,
-      scheduledDate: formData.scheduledDate || undefined,
-      endDate: formData.endDate || undefined,
+      scheduledDate: scheduledDate || undefined,
+      endDate: endDate || undefined,
       hijriDate: formData.hijriDate || undefined,
       status: formData.status,
       assignedEmployees: formData.assignedEmployees,

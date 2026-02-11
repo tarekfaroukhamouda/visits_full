@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useData } from '../contexts/DataContext';
+import { formatHijriDate } from '../utils/hijriUtils';
 import { Plus, CheckSquare, Clock, Calendar as CalendarIcon, User, Search, Filter, Trash2, Edit2, AlertCircle, CheckCircle2, Circle } from 'lucide-react';
 import { toast } from 'sonner';
 import { taskApi, Task } from '../services/api';
@@ -254,7 +255,7 @@ export function TasksManagement({ user }: TasksManagementProps) {
                                             <div className={`flex items-center gap-1.5 ${new Date(task.due_date) < new Date() && task.status !== 'completed' ? 'text-red-500 font-medium' : ''
                                                 }`}>
                                                 <CalendarIcon className="w-4 h-4" />
-                                                <span>{new Date(task.due_date).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                                                <span>{formatHijriDate(new Date(task.due_date), language === 'ar' ? 'ar' : 'en', 'long')}</span>
                                             </div>
                                         )}
 
@@ -275,7 +276,7 @@ export function TasksManagement({ user }: TasksManagementProps) {
                                         {task.status === 'completed' && task.completed_at && (
                                             <div className="flex items-center gap-1.5 text-emerald-600">
                                                 <CheckCircle2 className="w-4 h-4" />
-                                                <span>{t('task_completion_date')}: {new Date(task.completed_at).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                                                <span>{t('task_completion_date')}: {formatHijriDate(new Date(task.completed_at), language === 'ar' ? 'ar' : 'en', 'long')}</span>
                                             </div>
                                         )}
                                     </div>

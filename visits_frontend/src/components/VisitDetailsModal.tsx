@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import { formatDate } from '../utils/dateUtils';
 import { exportVisitToPdf } from '../utils/pdfReport';
+import { formatHijriDate } from '../utils/hijriUtils';
 
 
 interface VisitDetailsModalProps {
@@ -117,20 +118,12 @@ export function VisitDetailsModal({ visit, onClose, isOpen = true, onEdit, userR
                   <div className="space-y-1">
                     <p className="text-gray-900 flex items-center gap-2">
                       <span className="text-xs text-gray-500">من:</span>
-                      {new Date(visit.scheduledDate).toLocaleDateString('ar-SA', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
+                      {formatHijriDate(new Date(visit.scheduledDate), language === 'ar' ? 'ar' : 'en', 'long')}
                     </p>
                     {visit.endDate && (
                       <p className="text-gray-900 flex items-center gap-2">
                         <span className="text-xs text-gray-500">إلى:</span>
-                        {new Date(visit.endDate).toLocaleDateString('ar-SA', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
+                        {formatHijriDate(new Date(visit.endDate), language === 'ar' ? 'ar' : 'en', 'long')}
                       </p>
                     )}
                   </div>
@@ -143,11 +136,7 @@ export function VisitDetailsModal({ visit, onClose, isOpen = true, onEdit, userR
                   <div>
                     <p className="text-sm text-gray-600 mb-1">التاريخ الفعلي</p>
                     <p className="text-gray-900">
-                      {new Date(visit.actualDate).toLocaleDateString('ar-SA', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
+                      {formatHijriDate(new Date(visit.actualDate), language === 'ar' ? 'ar' : 'en', 'long')}
                     </p>
                   </div>
                 </div>

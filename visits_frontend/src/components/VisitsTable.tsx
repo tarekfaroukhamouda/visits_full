@@ -4,6 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useVisitStatus, useFormatDate } from '../utils/translations';
 import { getEmployeeNames } from '../utils/dataHelpers';
 import { Visit } from '../App';
+import { formatHijriDate } from '../utils/hijriUtils';
 import { 
   Search, 
   Filter, 
@@ -78,8 +79,8 @@ export function VisitsTable({ userRole }: VisitsTableProps) {
     const data = filteredVisits.map(visit => ({
       'اسم المنشأة': visit.name,
       'النوع': visit.type === 'government' ? 'حكومي' : 'خاص',
-      'التاريخ المجدول': new Date(visit.scheduledDate).toLocaleDateString('ar-SA'),
-      'التاريخ الفعلي': visit.actualDate ? new Date(visit.actualDate).toLocaleDateString('ar-SA') : '-',
+      'التاريخ المجدول': formatHijriDate(new Date(visit.scheduledDate), 'ar', 'long'),
+      'التاريخ الفعلي': visit.actualDate ? formatHijriDate(new Date(visit.actualDate), 'ar', 'long') : '-',
       'الحالة': visit.status === 'completed' ? 'مكتملة' : 
                 visit.status === 'scheduled' ? 'مجدولة' : 
                 visit.status === 'postponed' ? 'مؤجلة' : 'غير مجدولة',
@@ -228,7 +229,7 @@ export function VisitsTable({ userRole }: VisitsTableProps) {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-700">
-                    {new Date(visit.scheduledDate).toLocaleDateString('ar-SA')}
+                    {formatHijriDate(new Date(visit.scheduledDate), language === 'ar' ? 'ar' : 'en', 'long')}
                   </td>
                   <td className="px-6 py-4">
                     {getStatusBadge(visit.status)}

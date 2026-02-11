@@ -8,6 +8,7 @@ import { useData } from '../contexts/DataContext';
 import { Visit } from '../App';
 import { VisitDetailsModal } from './VisitDetailsModal';
 import { EditVisitModal } from './EditVisitModal';
+import { toHijri, formatHijri, getHijriMonthName, fromHijri, getDaysInHijriMonth } from '../utils/hijriUtils';
 
 interface CalendarViewProps {
   userRole: number; // 0 = admin, 1 = manager
@@ -17,47 +18,86 @@ export function CalendarView({ userRole }: CalendarViewProps) {
   const { t, language, dir } = useLanguage();
   const { visits, programs, facilities, employees, deleteVisit } = useData();
 
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  try {
+    // Start with today's Hijri date
+    const today = new Date();
+    const todayHijri = toHijri(today);
+    
+    const [currentHijriYear, setCurrentHijriYear] = useState(todayHijri.year);
+    const [currentHijriMonth, setCurrentHijriMonth] = useState(todayHijri.month);
 
-  // Get month and year
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
+  // Get first day of Hijri month (as Gregorian date)
+  const firstDayGregorian = fromHijri(currentHijriYear, currentHijriMonth, 1);
+  const startingDayOfWeek = firstDayGregorian.getDay();
+  const daysInMonth = Math.max(29, Math.min(30, getDaysInHijriMonth(currentHijriYear, currentHijriMonth)));
 
-  // Get first day of month and total days
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const daysInMonth = lastDay.getDate();
-  const startingDayOfWeek = firstDay.getDay();
-
-  // Month names
+  // Hijri month names
   const monthNames = language === 'ar'
-    ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
-    : ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    ? [
+        'محرم', 'صفر', 'ربيع الأول', 'ربيع الثاني', 'جمادى الأولى', 'جمادى الآخرة',
+        'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'
+      ]
+    : [
+        'Muharram', 'Safar', "Rabi' al-awwal", "Rabi' al-thani", 'Jumada al-ula', 'Jumada al-akhira',
+        'Rajab', "Sha'ban", 'Ramadan', 'Shawwal', 'Dhu al-Qi\'dah', 'Dhu al-Hijjah'
+      ];
 
   const dayNames = language === 'ar'
     ? ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
     : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Navigate months
+  const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  // Navigate Hijri months
   const previousMonth = () => {
-    setCurrentDate(new Date(year, month - 1, 1));
+    if (currentHijriMonth === 1) {
+      setCurrentHijriMonth(12);
+      setCurrentHijriYear(currentHijriYear - 1);
+    } else {
+      setCurrentHijriMonth(currentHijriMonth - 1);
+    }
   };
 
   const nextMonth = () => {
-    setCurrentDate(new Date(year, month + 1, 1));
+    if (currentHijriMonth === 12) {
+      setCurrentHijriMonth(1);
+      setCurrentHijriYear(currentHijriYear + 1);
+    } else {
+      setCurrentHijriMonth(currentHijriMonth + 1);
+    }
   };
 
-  const today = () => {
-    setCurrentDate(new Date());
+  const goToToday = () => {
+    const todayHijri = toHijri(new Date());
+    setCurrentHijriYear(todayHijri.year);
+    setCurrentHijriMonth(todayHijri.month);
   };
 
-  // Get visits for a specific date
-  const getVisitsForDate = (day: number) => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    return visits.filter(visit => visit.scheduledDate === dateStr);
+  // Get visits for a specific Hijri date
+  const getVisitsForHijriDay = (day: number) => {
+    try {
+      const gregorianDate = fromHijri(currentHijriYear, currentHijriMonth, day);
+      const year = gregorianDate.getFullYear();
+      const month = gregorianDate.getMonth() + 1;
+      const dayNum = gregorianDate.getDate();
+      const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+      return visits.filter(visit => visit.scheduledDate === dateStr);
+    } catch (e) {
+      console.error(`Error getting visits for day ${day}:`, e);
+      return [];
+    }
+  };
+
+  // Check if a day is today
+  const isToday = (day: number) => {
+    try {
+      const dateForDay = fromHijri(currentHijriYear, currentHijriMonth, day);
+      return dateForDay.toDateString() === new Date().toDateString();
+    } catch (e) {
+      return false;
+    }
   };
 
   // Get program color
@@ -121,16 +161,16 @@ export function CalendarView({ userRole }: CalendarViewProps) {
 
     // Days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      const dayVisits = getVisitsForDate(day);
-      const isToday = new Date().toDateString() === new Date(year, month, day).toDateString();
+      const dayVisits = getVisitsForHijriDay(day);
+      const isTodayFlag = isToday(day);
 
       days.push(
         <div
           key={day}
-          className={`min-h-[120px] border border-gray-200 dark:border-gray-700 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${isToday ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-white dark:bg-gray-900'
+          className={`min-h-[120px] border border-gray-200 dark:border-gray-700 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors ${isTodayFlag ? 'bg-blue-50 dark:bg-blue-950/20' : 'bg-white dark:bg-gray-900'
             }`}
         >
-          <div className={`text-sm font-medium mb-2 ${isToday ? 'text-[#1565C0]' : 'text-gray-700 dark:text-gray-300'}`}>
+          <div className={`text-sm font-medium mb-2 ${isTodayFlag ? 'text-[#1565C0]' : 'text-gray-700 dark:text-gray-300'}`}>
             {day}
           </div>
 
@@ -230,12 +270,12 @@ export function CalendarView({ userRole }: CalendarViewProps) {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold">{t('visits_management')}</h2>
-          <p className="text-muted-foreground">{t('calendar_view_subtitle')}</p>
+          <p className="text-muted-foreground">{language === 'ar' ? 'التقويم الهجري' : 'Hijri Calendar'}</p>
         </div>
 
         {/* Month Navigation */}
         <div className="flex items-center gap-2">
-          <Button onClick={today} variant="outline" size="sm">
+          <Button onClick={goToToday} variant="outline" size="sm">
             <CalendarIcon className="w-4 h-4 mr-2" />
             {t('today')}
           </Button>
@@ -245,9 +285,9 @@ export function CalendarView({ userRole }: CalendarViewProps) {
               {dir === 'rtl' ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </Button>
 
-            <div className="px-4 text-center min-w-[180px]">
+            <div className="px-4 text-center min-w-[200px]">
               <p className="font-semibold">
-                {monthNames[month]} {year}
+                {monthNames[currentHijriMonth - 1]} {currentHijriYear} هـ
               </p>
             </div>
 
@@ -330,4 +370,16 @@ export function CalendarView({ userRole }: CalendarViewProps) {
       )}
     </div>
   );
+  } catch (error) {
+    console.error('CalendarView Error:', error);
+    return (
+      <Card className="p-6">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold text-red-600 mb-2">Error Loading Calendar</h2>
+          <p className="text-gray-600 mb-4">An error occurred while rendering the calendar. Please refresh the page.</p>
+          <Button onClick={() => window.location.reload()}>Refresh</Button>
+        </div>
+      </Card>
+    );
+  }
 }

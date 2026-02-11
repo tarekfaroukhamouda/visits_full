@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useData } from '../contexts/DataContext';
+import { formatHijriDate } from '../utils/hijriUtils';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -256,7 +257,7 @@ export function VacationsManagement({ user }: VacationsManagementProps) {
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
                       <span>
-                        {new Date(vacation.startDate).toLocaleDateString(dir === 'rtl' ? 'ar-SA' : 'en-US')} - {new Date(vacation.endDate).toLocaleDateString(dir === 'rtl' ? 'ar-SA' : 'en-US')}
+                        {formatHijriDate(new Date(vacation.startDate), dir === 'rtl' ? 'ar' : 'en', 'long')} - {formatHijriDate(new Date(vacation.endDate), dir === 'rtl' ? 'ar' : 'en', 'long')}
                       </span>
                     </div>
                   </div>
@@ -265,7 +266,7 @@ export function VacationsManagement({ user }: VacationsManagementProps) {
 
                   {vacation.reviewedBy && (
                     <p className="text-xs text-gray-500">
-                      {t('reviewed_by')}: {vacation.reviewedBy} - {new Date(vacation.reviewedAt!).toLocaleDateString(dir === 'rtl' ? 'ar-SA' : 'en-US')}
+                      {t('reviewed_by')}: {vacation.reviewedBy} - {formatHijriDate(new Date(vacation.reviewedAt!), dir === 'rtl' ? 'ar' : 'en', 'long')}
                     </p>
                   )}
                 </div>

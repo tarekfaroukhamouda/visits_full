@@ -1,4 +1,5 @@
 import { useLanguage } from '../contexts/LanguageContext';
+import { toHijri, formatHijriDate, getHijriMonthName } from './hijriUtils';
 
 // Hook to get translated visit status
 export function useVisitStatus() {
@@ -21,12 +22,18 @@ export function useVisitStatus() {
   };
 }
 
-// Format date based on language
+// Format date based on language - now using Hijri calendar
 export function useFormatDate() {
   const { language } = useLanguage();
   
   return (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US');
+    try {
+      const date = new Date(dateString);
+      // Format as Hijri date
+      return formatHijriDate(date, language === 'ar' ? 'ar' : 'en', 'long');
+    } catch (e) {
+      return dateString;
+    }
   };
 }
+

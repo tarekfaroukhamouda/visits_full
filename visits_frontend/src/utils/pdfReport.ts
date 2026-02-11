@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import { getEmployeeNames } from './dataHelpers';
+import { formatHijriDate } from './hijriUtils';
 import type { Visit } from '../App';
 import type { Employee } from '../App';
 import { toast } from 'sonner@2.0.3';
@@ -58,22 +59,14 @@ export function exportVisitToPdf(visit: Visit, employees: Employee[]) {
   doc.setFont('helvetica', 'bold');
   doc.text('Scheduled Date:', 20, yPos);
   doc.setFont('helvetica', 'normal');
-  doc.text(new Date(visit.scheduledDate).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }), 50, yPos);
+  doc.text(formatHijriDate(new Date(visit.scheduledDate), 'en', 'long'), 50, yPos);
   yPos += 7;
 
   if (visit.actualDate) {
     doc.setFont('helvetica', 'bold');
     doc.text('Actual Date:', 20, yPos);
     doc.setFont('helvetica', 'normal');
-    doc.text(new Date(visit.actualDate).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }), 50, yPos);
+    doc.text(formatHijriDate(new Date(visit.actualDate), 'en', 'long'), 50, yPos);
     yPos += 7;
   }
 
@@ -177,7 +170,7 @@ export function exportVisitToPdf(visit: Visit, employees: Employee[]) {
     doc.setFontSize(9);
     doc.setTextColor(120, 120, 120);
     doc.text(
-      `Page ${i} of ${pageCount} | Generated on ${new Date().toLocaleDateString('en-US')}`,
+      `Page ${i} of ${pageCount} | Generated on ${formatHijriDate(new Date(), 'en', 'long')}`,
       105,
       287,
       { align: 'center' }

@@ -345,9 +345,6 @@ const translations: Record<Language, Record<string, string>> = {
     'error_creating_task': 'فشل في إنشاء المهمة',
 
     // Tasks & Corrective Plans
-    'tasks': 'المهام',
-    'add_task': 'إضافة مهمة',
-    'task_placeholder': 'مثال: مراجعة بروتوكولات التعقيم',
     'corrective_plan': 'الخطة التصحيحية',
     'plan_status': 'حالة الخطة',
     'plan_approved': 'معتمدة',
@@ -419,8 +416,6 @@ const translations: Record<Language, Record<string, string>> = {
     'visit_report': 'تقرير الزيارة',
     'write_report_placeholder': 'اكتب تقرير الزيارة هنا...',
     'submit_report': 'إرسال التقرير',
-    'cancel': 'إلغاء',
-    'status_completed': 'مكتملة',
   },
   en: {
     // Header
@@ -682,6 +677,9 @@ const translations: Record<Language, Record<string, string>> = {
     'pending_swaps': 'Pending Swap Requests',
     'swap_requests': 'Swap Requests',
 
+    // Tasks Feature
+    'tasks': 'Tasks',
+    'add_task': 'Add Task',
     'tasks_description': 'Manage and track your tasks and team tasks',
     'task_title': 'Task Title',
     'task_description': 'Description',
@@ -716,9 +714,6 @@ const translations: Record<Language, Record<string, string>> = {
     'error_creating_task': 'Failed to create task',
 
     // Tasks & Corrective Plans
-    'tasks': 'Tasks',
-    'add_task': 'Add Task',
-    'task_placeholder': 'Example: Review sterilization protocols',
     'corrective_plan': 'Corrective Plan',
     'plan_status': 'Plan Status',
     'plan_approved': 'Approved',
@@ -790,7 +785,5 @@ const translations: Record<Language, Record<string, string>> = {
     'visit_report': 'Visit Report',
     'write_report_placeholder': 'Write visit report here...',
     'submit_report': 'Submit Report',
-    'cancel': 'Cancel',
-    'status_completed': 'Completed',
   }
 };

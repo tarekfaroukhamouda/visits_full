@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useData } from '../contexts/DataContext';
+import { formatHijriDate } from '../utils/hijriUtils';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -194,7 +195,7 @@ export function SwapRequestsManagement({ user }: SwapRequestsManagementProps) {
                           const facility = facilities.find(f => f.id === visit.facilityId);
                           return (
                             <SelectItem key={visit.id} value={visit.id}>
-                              {facility?.name || visit.facilityName} - {new Date(visit.scheduledDate).toLocaleDateString(dir === 'rtl' ? 'ar-SA' : 'en-US')}
+                              {facility?.name || visit.facilityName} - {formatHijriDate(new Date(visit.scheduledDate), dir === 'rtl' ? 'ar' : 'en', 'long')}
                             </SelectItem>
                           );
                         })}
@@ -302,7 +303,7 @@ export function SwapRequestsManagement({ user }: SwapRequestsManagementProps) {
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         <span>
-                          {new Date(visitDetails.date).toLocaleDateString(dir === 'rtl' ? 'ar-SA' : 'en-US')}
+                          {formatHijriDate(new Date(visitDetails.date), dir === 'rtl' ? 'ar' : 'en', 'long')}
                         </span>
                       </div>
                     </div>
@@ -310,7 +311,7 @@ export function SwapRequestsManagement({ user }: SwapRequestsManagementProps) {
                     <p className="text-sm text-gray-700">{request.reason}</p>
 
                     <p className="text-xs text-gray-500">
-                      {t('date')}: {new Date(request.requestedAt).toLocaleDateString(dir === 'rtl' ? 'ar-SA' : 'en-US')}
+                      {t('date')}: {formatHijriDate(new Date(request.requestedAt), dir === 'rtl' ? 'ar' : 'en', 'long')}
                     </p>
                   </div>
 

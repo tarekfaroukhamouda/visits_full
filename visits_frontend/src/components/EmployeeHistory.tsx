@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useData } from '../contexts/DataContext';
+import { formatHijriDate } from '../utils/hijriUtils';
 import { Card } from './ui/card';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
@@ -154,8 +155,10 @@ export function EmployeeHistory() {
         <div className="flex flex-wrap gap-4 text-sm text-gray-600">
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            {new Date(visit.scheduledDate).toLocaleDateString(
-              dir === 'rtl' ? 'ar-SA' : 'en-US'
+            {formatHijriDate(
+              new Date(visit.scheduledDate),
+              dir === 'rtl' ? 'ar' : 'en',
+              'long'
             )}
           </div>
 
