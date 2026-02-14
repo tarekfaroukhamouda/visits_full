@@ -5,7 +5,7 @@ import { Save, Plus, X, AlertTriangle, FileText } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { checkMultipleEmployeesAvailability, getAvailableEmployees } from '../utils/conflictChecker';
 import { FileUpload } from './FileUpload';
-import { fromHijri } from '../utils/hijriUtils';
+import { HijriDateInput } from './HijriDateInput';
 
 export function AddVisitForm() {
   const { addVisit, employees, visits, facilities, programs } = useData();
@@ -15,10 +15,8 @@ export function AddVisitForm() {
     facilityId: '',
     type: 'government' as 'government' | 'private',
     location: 'inside-taif' as 'inside-taif' | 'outside-taif',
-    scheduledDate: '',
-    endDate: '',
-    dateType: 'hijri' as 'gregorian' | 'hijri',
-    hijriDate: '',
+    scheduledDate: '', // Now stores Hijri date directly
+    endDate: '', // Now stores Hijri end date directly
     status: 'scheduled' as 'scheduled' | 'unscheduled',
     assignedEmployees: [] as string[],
     programId: '',
@@ -64,18 +62,19 @@ export function AddVisitForm() {
       return;
     }
 
-    if (formData.dateType === 'gregorian' && !formData.scheduledDate) {
+    if (!formData.scheduledDate) {
       toast.error(t('required_fields'));
       return;
     }
 
-    if (formData.endDate && formData.scheduledDate && new Date(formData.endDate) < new Date(formData.scheduledDate)) {
+    // Check if program is selected
+    if (!formData.programId) {
+      toast.error(language === 'ar' ? 'يجب اختيار البرنامج' : 'Program must be selected');
+      return;
+    }
+
+    if (formData.endDate && formData.scheduledDate && formData.endDate < formData.scheduledDate) {
       toast.error(t('end_date_error'));
-      return;
-    }
-
-    if (formData.dateType === 'hijri' && !formData.hijriDate) {
-      toast.error(t('required_fields'));
       return;
     }
 
@@ -95,34 +94,14 @@ export function AddVisitForm() {
     const facility = facilities.find((f: any) => f.id === formData.facilityId);
     const doctorIds = formData.assignedEmployees.map((id: string) => parseInt(id));
 
-    // Convert Hijri date to Gregorian if needed
-    let scheduledDate = formData.scheduledDate;
-    let endDate = formData.endDate;
-    
-    if (formData.dateType === 'hijri' && formData.hijriDate) {
-      // Parse Hijri date (format: YYYY-MM-DD)
-      const parts = formData.hijriDate.split('-');
-      if (parts.length === 3) {
-        const hijriYear = parseInt(parts[0]);
-        const hijriMonth = parseInt(parts[1]);
-        const hijriDay = parseInt(parts[2]);
-        const gregorianDate = fromHijri(hijriYear, hijriMonth, hijriDay);
-        const year = gregorianDate.getFullYear();
-        const month = String(gregorianDate.getMonth() + 1).padStart(2, '0');
-        const day = String(gregorianDate.getDate()).padStart(2, '0');
-        scheduledDate = `${year}-${month}-${day}`;
-      }
-    }
-
-    // Create visit object
+    // Create visit object - scheduledDate and endDate now contain Hijri dates
     const newVisit = {
       facilityId: formData.facilityId,
       facilityName: facility?.name,
       type: formData.type,
       location: formData.location,
-      scheduledDate: scheduledDate || undefined,
-      endDate: endDate || undefined,
-      hijriDate: formData.hijriDate || undefined,
+      scheduledDate: formData.scheduledDate, // Hijri date
+      endDate: formData.endDate || undefined, // Hijri end date
       status: formData.status,
       assignedEmployees: formData.assignedEmployees,
       programId: formData.programId || undefined,
@@ -332,61 +311,23 @@ export function AddVisitForm() {
               <label className="block text-gray-700 mb-2">
                 {t('scheduled_date')} <span className="text-red-500">*</span>
               </label>
-              <div className="flex gap-3 items-center mb-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="dateType"
-                    checked={formData.dateType === 'gregorian'}
-                    onChange={() => setFormData(prev => ({ ...prev, dateType: 'gregorian' }))}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm">Gregorian</span>
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="radio"
-                    name="dateType"
-                    checked={formData.dateType === 'hijri'}
-                    onChange={() => setFormData(prev => ({ ...prev, dateType: 'hijri', scheduledDate: '' }))}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm">Hijri</span>
-                </label>
-              </div>
-
-              {formData.dateType === 'gregorian' ? (
-                <input
-                  type="date"
-                  value={formData.scheduledDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl input-enhanced focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  required
-                />
-              ) : (
-                <input
-                  type="text"
-                  placeholder="YYYY-MM-DD"
-                  value={formData.hijriDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, hijriDate: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl input-enhanced focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                />
-              )}
+              <HijriDateInput
+                value={formData.scheduledDate}
+                onChange={(value) => setFormData(prev => ({ ...prev, scheduledDate: value }))}
+                placeholder="1446-08-15"
+                required
+              />
             </div>
-
-
 
             <div>
               <label className="block text-gray-700 mb-2">
                 {t('end_date')}
               </label>
-              <input
-                type="date"
+              <HijriDateInput
                 value={formData.endDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                onChange={(value) => setFormData(prev => ({ ...prev, endDate: value }))}
+                placeholder="1446-08-20"
                 min={formData.scheduledDate}
-                disabled={!formData.scheduledDate}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl input-enhanced focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
               />
             </div>
           </div>
@@ -394,14 +335,15 @@ export function AddVisitForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-gray-700 mb-2">
-                {t('program_name')}
+                {t('program_name')} <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.programId}
                 onChange={(e) => setFormData(prev => ({ ...prev, programId: e.target.value }))}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl input-enhanced focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                required
               >
-                <option value="">{t('all_types')}</option>
+                <option value="">{language === 'ar' ? 'اختر البرنامج' : 'Select Program'}</option>
                 {programs.map(program => (
                   <option key={program.id} value={program.id}>
                     {language === 'ar' ? program.name : program.nameEn}

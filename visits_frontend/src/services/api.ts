@@ -30,7 +30,7 @@ export const excelUploadApi = {
   },
 };
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://38.247.128.186:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 // Types
 export interface ApiResponse<T> {
@@ -117,6 +117,10 @@ export const visitApi = {
   getByDoctor: (doctorId: number) => apiRequest<any[]>(`/visits/visits-by-doctor/?doctor_id=${doctorId}`),
   /** Current user's visits (token-based). Use when role 1 or 2. */
   getMyVisits: () => apiRequest<any[]>('/visits/my-visits'),
+  /** Close a visit (set progress to 1) */
+  closeVisit: (id: number) => apiRequest<any>(`/visits/${id}/close`, { method: 'PUT' }),
+  /** Submit correction plan (set progress to 2, requires visit to be closed first) */
+  submitCorrectionPlan: (id: number) => apiRequest<any>(`/visits/${id}/submit-correction-plan`, { method: 'PUT' }),
 };
 
 // Doctor API
@@ -235,7 +239,7 @@ export interface Task {
   created_by_id?: number;
   created_at: string;
   completed_at?: string;
-  due_date?: string;
+  hijri_due_date?: string;
   report?: string;
 }
 
@@ -271,11 +275,12 @@ export const transformVisit = (backendVisit: any): any => {
     facilityName: backendVisit.location?.name || '',
     type: backendVisit.location?.type || 'government',
     location: backendVisit.location?.inside ? 'inside-taif' : 'outside-taif',
-    scheduledDate: backendVisit.date || '',
-    endDate: backendVisit.end_date || undefined,
-    hijriDate: backendVisit.hijri_date || undefined,
-    actualDate: backendVisit.date || '',
+    scheduledDate: backendVisit.hijri_date || '', // Hijri date for scheduled visit
+    endDate: backendVisit.hijri_end_date || undefined,
+    hijriDate: backendVisit.hijri_date || undefined, // Keep for compatibility
+    actualDate: backendVisit.actual_hijri_date || undefined, // Only set if visit was actually completed on a different date
     status: backendVisit.status || 'scheduled',
+    progress: backendVisit.progress ?? 0, // 0: not closed, 1: closed (no correction plan), 2: closed + correction plan submitted
     assignedEmployees: backendVisit.doctors?.map((vd: any) => vd.doctor?.id?.toString() || '') || [],
     postponeReason: backendVisit.notes || undefined,
     report: backendVisit.report || undefined,
@@ -331,8 +336,8 @@ export const transformVacation = (backendVacation: any): any => {
   return {
     id: backendVacation.id?.toString() || '',
     employeeId: backendVacation.doctor_id?.toString() || '',
-    startDate: backendVacation.start_date || '',
-    endDate: backendVacation.end_date || '',
+    startDate: backendVacation.hijri_start_date || '', // Now stores Hijri date
+    endDate: backendVacation.hijri_end_date || '', // Now stores Hijri date
     reason: backendVacation.reason || '',
     status: backendVacation.status || 'pending',
     requestedAt: backendVacation.requested_at || new Date().toISOString(),

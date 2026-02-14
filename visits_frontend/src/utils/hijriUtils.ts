@@ -57,7 +57,7 @@ export function fromHijri(year: number, month: number, day: number): Date {
         if (year < 1 || month < 1 || month > 12 || day < 1 || day > 31) {
             return new Date(); // Return today as fallback
         }
-        
+
         // Start with an approximate Gregorian date
         let date = new Date((year - 579) * 0.97 + 622, 0, 1);
         // Refine
@@ -91,7 +91,7 @@ export function getDaysInHijriMonth(year: number, month: number): number {
         // Validate inputs
         if (month < 1 || month > 12) return 29;
         if (year < 1) return 29;
-        
+
         const date = fromHijri(year, month, 29);
         date.setDate(date.getDate() + 1);
         const h = toHijri(date);
@@ -151,9 +151,9 @@ export function getHijriDayName(dayIndex: number, locale: 'ar' | 'en' = 'ar'): s
 export function formatHijriDate(date: Date, locale: 'ar' | 'en' = 'ar', format: 'short' | 'long' = 'short'): string {
     const h = toHijri(date);
     const monthName = getHijriMonthName(h.month, locale);
-    
+
     if (locale === 'ar') {
-        return format === 'short' 
+        return format === 'short'
             ? `${h.day}/${h.month}/${h.year}`
             : `${h.day} ${monthName} ${h.year} هـ`;
     } else {
@@ -171,17 +171,17 @@ export function getDaysInHijriMonthArray(year: number, month: number): number[] 
     const firstDay = fromHijri(year, month, 1);
     const startingDayOfWeek = firstDay.getDay();
     const daysInMonth = getDaysInHijriMonth(year, month);
-    
+
     // Add empty slots for days before the month starts
     for (let i = 0; i < startingDayOfWeek; i++) {
         days.push(0);
     }
-    
+
     // Add actual days
     for (let day = 1; day <= daysInMonth; day++) {
         days.push(day);
     }
-    
+
     return days;
 }
 
@@ -209,4 +209,28 @@ export function isSameHijriDay(date1: Date, date2: Date): boolean {
     const h1 = toHijri(date1);
     const h2 = toHijri(date2);
     return h1.year === h2.year && h1.month === h2.month && h1.day === h2.day;
+}
+
+/**
+ * Formats a Hijri date string (YYYY-MM-DD) to a localized display string
+ * This is used when dates are already stored in Hijri format
+ */
+export function formatHijriDateString(hijriDateStr: string, locale: 'ar' | 'en' = 'ar', format: 'short' | 'long' = 'short'): string {
+    if (!hijriDateStr) return '';
+
+    const parsed = parseHijriDate(hijriDateStr);
+    if (!parsed) return hijriDateStr; // Return original if parsing fails
+
+    const { y: year, m: month, d: day } = parsed;
+    const monthName = getHijriMonthName(month, locale);
+
+    if (locale === 'ar') {
+        return format === 'short'
+            ? `${day}/${month}/${year}`
+            : `${day} ${monthName} ${year} هـ`;
+    } else {
+        return format === 'short'
+            ? `${day}/${month}/${year}`
+            : `${monthName} ${day}, ${year} AH`;
+    }
 }

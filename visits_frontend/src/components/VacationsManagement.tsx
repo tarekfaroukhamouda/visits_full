@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useData } from '../contexts/DataContext';
-import { formatHijriDate } from '../utils/hijriUtils';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -13,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Calendar, Plus, Check, X, Clock } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { Vacation, User } from '../App';
+import { HijriDateInput } from './HijriDateInput';
 
 interface VacationsManagementProps {
   user?: User;
@@ -20,7 +20,7 @@ interface VacationsManagementProps {
 
 export function VacationsManagement({ user }: VacationsManagementProps) {
   const { t, dir } = useLanguage();
-  const { vacations, employees, addVacation, updateVacation, deleteVacation } = useData();
+  const { vacations, employees, visits, addVacation, updateVacation, deleteVacation } = useData();
   const isRole1 = user?.role === 1;
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [filterEmployee, setFilterEmployee] = useState<string>('all');
@@ -42,6 +42,30 @@ export function VacationsManagement({ user }: VacationsManagementProps) {
       toast.error(t('required_fields'));
       return;
     }
+
+    // Check if employee has any visits during the vacation period
+    const employeeVisits = visits.filter(v =>
+      v.assignedEmployees.includes(employeeId) &&
+      (v.status === 'scheduled' || v.status === 'unscheduled')
+    );
+
+    const hasConflict = employeeVisits.some(visit => {
+      const visitDate = visit.scheduledDate; // Already in Hijri format YYYY-MM-DD
+      const visitEndDate = visit.endDate || visitDate;
+
+      // Check if visit date range overlaps with vacation period
+      return (
+        (visitDate >= formData.startDate && visitDate <= formData.endDate) ||
+        (visitEndDate >= formData.startDate && visitEndDate <= formData.endDate) ||
+        (visitDate <= formData.startDate && visitEndDate >= formData.endDate)
+      );
+    });
+
+    if (hasConflict) {
+      toast.error('❌ لا يمكن طلب إجازة خلال فترة لديك فيها زيارات مجدولة / Cannot request vacation during a period with scheduled visits');
+      return;
+    }
+
 
     const newVacation: Omit<Vacation, 'id'> = {
       employeeId,
@@ -196,20 +220,22 @@ export function VacationsManagement({ user }: VacationsManagementProps) {
                   )}
 
                   <div>
-                    <Label>{t('vacation_start')}</Label>
-                    <Input
-                      type="date"
+                    <Label>{t('vacation_start')} (تاريخ هجري / Hijri Date)</Label>
+                    <HijriDateInput
                       value={formData.startDate}
-                      onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
+                      onChange={(value) => setFormData(prev => ({ ...prev, startDate: value }))}
+                      placeholder="YYYY-MM-DD (مثال: 1446-08-15)"
+                      required
                     />
                   </div>
 
                   <div>
-                    <Label>{t('vacation_end')}</Label>
-                    <Input
-                      type="date"
+                    <Label>{t('vacation_end')} (تاريخ هجري / Hijri Date)</Label>
+                    <HijriDateInput
                       value={formData.endDate}
-                      onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                      onChange={(value) => setFormData(prev => ({ ...prev, endDate: value }))}
+                      placeholder="YYYY-MM-DD (مثال: 1446-08-20)"
+                      required
                     />
                   </div>
 
@@ -257,7 +283,7 @@ export function VacationsManagement({ user }: VacationsManagementProps) {
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
                       <span>
-                        {formatHijriDate(new Date(vacation.startDate), dir === 'rtl' ? 'ar' : 'en', 'long')} - {formatHijriDate(new Date(vacation.endDate), dir === 'rtl' ? 'ar' : 'en', 'long')}
+                        {new Date(vacation.startDate).toLocaleDateString(dir === 'rtl' ? 'ar-SA' : 'en-US')} - {new Date(vacation.endDate).toLocaleDateString(dir === 'rtl' ? 'ar-SA' : 'en-US')}
                       </span>
                     </div>
                   </div>
@@ -266,7 +292,7 @@ export function VacationsManagement({ user }: VacationsManagementProps) {
 
                   {vacation.reviewedBy && (
                     <p className="text-xs text-gray-500">
-                      {t('reviewed_by')}: {vacation.reviewedBy} - {formatHijriDate(new Date(vacation.reviewedAt!), dir === 'rtl' ? 'ar' : 'en', 'long')}
+                      {t('reviewed_by')}: {vacation.reviewedBy} - {new Date(vacation.reviewedAt!).toLocaleDateString(dir === 'rtl' ? 'ar-SA' : 'en-US')}
                     </p>
                   )}
                 </div>

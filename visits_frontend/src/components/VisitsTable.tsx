@@ -5,10 +5,10 @@ import { useVisitStatus, useFormatDate } from '../utils/translations';
 import { getEmployeeNames } from '../utils/dataHelpers';
 import { Visit } from '../App';
 import { formatHijriDate } from '../utils/hijriUtils';
-import { 
-  Search, 
-  Filter, 
-  Download, 
+import {
+  Search,
+  Filter,
+  Download,
   FileText,
   Eye,
   CheckCircle,
@@ -16,7 +16,8 @@ import {
   AlertCircle,
   Calendar,
   Edit,
-  Trash2
+  Trash2,
+  Send
 } from 'lucide-react';
 import { VisitDetailsModal } from './VisitDetailsModal';
 import { EditVisitModal } from './EditVisitModal';
@@ -28,7 +29,8 @@ interface VisitsTableProps {
 }
 
 export function VisitsTable({ userRole }: VisitsTableProps) {
-  const { visits, deleteVisit, employees } = useData();
+  const { visits, deleteVisit, employees, submitCorrectionPlan } = useData();
+  const { language } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -40,7 +42,7 @@ export function VisitsTable({ userRole }: VisitsTableProps) {
       const matchesSearch = visit.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || visit.status === statusFilter;
       const matchesType = typeFilter === 'all' || visit.type === typeFilter;
-      
+
       return matchesSearch && matchesStatus && matchesType;
     });
   }, [visits, searchTerm, statusFilter, typeFilter]);
@@ -81,9 +83,9 @@ export function VisitsTable({ userRole }: VisitsTableProps) {
       'النوع': visit.type === 'government' ? 'حكومي' : 'خاص',
       'التاريخ المجدول': formatHijriDate(new Date(visit.scheduledDate), 'ar', 'long'),
       'التاريخ الفعلي': visit.actualDate ? formatHijriDate(new Date(visit.actualDate), 'ar', 'long') : '-',
-      'الحالة': visit.status === 'completed' ? 'مكتملة' : 
-                visit.status === 'scheduled' ? 'مجدولة' : 
-                visit.status === 'postponed' ? 'مؤجلة' : 'غير مجدولة',
+      'الحالة': visit.status === 'completed' ? 'مكتملة' :
+        visit.status === 'scheduled' ? 'مجدولة' :
+          visit.status === 'postponed' ? 'مؤجلة' : 'غير مجدولة',
       'الموظفين المكلفين': getEmployeeNames(visit.assignedEmployees, employees),
       'سبب التأجيل': visit.postponeReason || '-',
       'نسبة الالتزام': visit.infectionControl?.complianceLevel ? `${visit.infectionControl.complianceLevel}%` : '-'
@@ -92,7 +94,7 @@ export function VisitsTable({ userRole }: VisitsTableProps) {
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'الزيارات الميدانية');
-    
+
     // Set column widths
     ws['!cols'] = [
       { wch: 30 }, // اسم المنشأة
@@ -107,7 +109,7 @@ export function VisitsTable({ userRole }: VisitsTableProps) {
 
     const fileName = `الزيارات_الميدانية_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, fileName);
-    
+
     toast.success('✅ تم تصدير الملف بنجاح', {
       description: `تم حفظ ${filteredVisits.length} زيارة في ملف Excel`,
       duration: 3000
@@ -132,7 +134,7 @@ export function VisitsTable({ userRole }: VisitsTableProps) {
           <h2 className="text-gray-900 mb-2">جدول الزيارات الميدانية</h2>
           <p className="text-gray-600">إدارة ومتابعة جميع الزيارات</p>
         </div>
-        
+
         <button
           onClick={exportToExcel}
           className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -220,11 +222,10 @@ export function VisitsTable({ userRole }: VisitsTableProps) {
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      visit.type === 'government' 
-                        ? 'bg-blue-100 text-blue-700' 
+                    <span className={`px-3 py-1 rounded-full text-sm ${visit.type === 'government'
+                        ? 'bg-blue-100 text-blue-700'
                         : 'bg-purple-100 text-purple-700'
-                    }`}>
+                      }`}>
                       {visit.type === 'government' ? 'حكومي' : 'خاص'}
                     </span>
                   </td>
@@ -261,20 +262,40 @@ export function VisitsTable({ userRole }: VisitsTableProps) {
                       >
                         <Eye className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => setEditingVisit(visit)}
-                        className="flex items-center gap-1 px-3 py-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="تعديل"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(visit)}
-                        className="flex items-center gap-1 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="حذف"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {userRole !== 1 && (
+                        <>
+                          <button
+                            onClick={() => setEditingVisit(visit)}
+                            className="flex items-center gap-1 px-3 py-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            title="تعديل"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(visit)}
+                            className="flex items-center gap-1 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="حذف"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                      {userRole === 1 && (visit as any).progress === 1 && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await submitCorrectionPlan(visit.id);
+                            } catch (err) {
+                              // Error already handled in context
+                            }
+                          }}
+                          className="flex items-center gap-1 px-3 py-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                          title="تقديم خطة التصحيح"
+                        >
+                          <Send className="w-4 h-4" />
+                          <span className="text-sm">تقديم خطة التصحيح</span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

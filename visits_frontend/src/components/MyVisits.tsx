@@ -8,6 +8,7 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Calendar, MapPin, Users, Clock, CheckCircle2, AlertCircle, Search, FileText } from 'lucide-react';
 import { VisitDetailsModal } from './VisitDetailsModal';
+import { fromHijri } from '../utils/hijriUtils';
 import type { Visit } from '../App';
 
 interface MyVisitsProps {
@@ -40,9 +41,25 @@ export function MyVisits({ userId, userRole }: MyVisitsProps) {
       const matchesStatus = statusFilter === 'all' || visit.status === statusFilter;
       let matchesDate = true;
       if (dateFilter === 'upcoming') {
-        matchesDate = new Date(visit.scheduledDate) > new Date() && visit.status !== 'completed';
+        // Convert Hijri date to Gregorian for comparison
+        try {
+          const [year, month, day] = visit.scheduledDate.split('-').map(Number);
+          const gregorianDate = fromHijri(year, month, day);
+          matchesDate = gregorianDate > new Date() && visit.status !== 'completed';
+        } catch (e) {
+          console.error('Error parsing Hijri date:', visit.scheduledDate, e);
+          matchesDate = visit.status !== 'completed';
+        }
       } else if (dateFilter === 'past') {
-        matchesDate = new Date(visit.scheduledDate) < new Date() || visit.status === 'completed';
+        // Convert Hijri date to Gregorian for comparison
+        try {
+          const [year, month, day] = visit.scheduledDate.split('-').map(Number);
+          const gregorianDate = fromHijri(year, month, day);
+          matchesDate = gregorianDate < new Date() || visit.status === 'completed';
+        } catch (e) {
+          console.error('Error parsing Hijri date:', visit.scheduledDate, e);
+          matchesDate = visit.status === 'completed';
+        }
       }
       return matchesSearch && matchesStatus && matchesDate;
     });
@@ -52,9 +69,16 @@ export function MyVisits({ userId, userRole }: MyVisitsProps) {
     const total = myVisits.length;
     const completed = myVisits.filter((v) => v.status === 'completed').length;
     const scheduled = myVisits.filter((v) => v.status === 'scheduled').length;
-    const upcoming = myVisits.filter(
-      (v) => new Date(v.scheduledDate) > new Date() && v.status !== 'completed'
-    ).length;
+    const upcoming = myVisits.filter((v) => {
+      try {
+        const [year, month, day] = v.scheduledDate.split('-').map(Number);
+        const gregorianDate = fromHijri(year, month, day);
+        return gregorianDate > new Date() && v.status !== 'completed';
+      } catch (e) {
+        console.error('Error parsing Hijri date:', v.scheduledDate, e);
+        return v.status !== 'completed';
+      }
+    }).length;
     return { total, completed, scheduled, upcoming };
   }, [myVisits]);
 

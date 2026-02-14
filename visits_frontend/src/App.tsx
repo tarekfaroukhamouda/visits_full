@@ -3,8 +3,6 @@ import { CalendarView } from './components/CalendarView';
 import { AddVisitForm } from './components/AddVisitFormEnhanced';
 import { LoginScreen } from './components/LoginScreen';
 import { Header } from './components/Header';
-import { ForgotPassword } from './components/ForgotPassword';
-import { ResetPassword } from './components/ResetPassword';
 import { EmployeesManagement } from './components/EmployeesManagement';
 import { FacilitiesManagement } from './components/FacilitiesManagement';
 import { EmployeePerformance } from './components/EmployeePerformance';
@@ -15,11 +13,10 @@ import { EmployeeHistory } from './components/EmployeeHistory';
 import { ExcelUploadVisits } from './components/ExcelUploadVisits';
 import { MyVisits } from './components/MyVisits';
 import { MyReport } from './components/MyReport';
-import { TasksManagement } from './components/TasksManagement';
-import { DataProvider, useData } from './contexts/DataContext';
+import { DataProvider } from './contexts/DataContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { Toaster } from './components/ui/sonner';
-import { Users, Calendar, FileText, Home, Building2, BarChart3, Layers, Palmtree, RefreshCw, History, FileUp, ClipboardList, CheckSquare } from 'lucide-react';
+import { Users, Calendar, FileText, Home, Building2, BarChart3, Layers, Palmtree, RefreshCw, History, FileUp, ClipboardList } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { doctorApi } from './services/api';
 
@@ -92,7 +89,6 @@ export interface Program {
     pending: number;
   };
   trainingSessions?: number;
-  icon?: string;
 }
 
 export interface Visit {
@@ -102,13 +98,11 @@ export interface Visit {
   type: 'government' | 'private';
   location?: 'inside-taif' | 'outside-taif';
   scheduledDate: string;
-  endDate?: string;
   hijriDate?: string;
   actualDate?: string;
   status: 'completed' | 'postponed' | 'scheduled' | 'unscheduled' | 'cancelled';
   assignedEmployees: string[];
   postponeReason?: string;
-  report?: string;
   programId?: string;
   tasks?: string[];
   correctivePlan?: CorrectivePlan;
@@ -120,35 +114,14 @@ export interface Visit {
   correctivePlanApproved?: boolean;
 }
 
-type ViewType = 'dashboard' | 'visits' | 'add-visit' | 'employees' | 'facilities' | 'performance' | 'programs' | 'vacations' | 'swap-requests' | 'employee-history' | 'excel-upload' | 'my-visits' | 'my-report' | 'tasks';
-type GuestViewType = 'login' | 'forgot-password' | 'reset-password';
+type ViewType = 'dashboard' | 'visits' | 'add-visit' | 'employees' | 'facilities' | 'performance' | 'programs' | 'vacations' | 'swap-requests' | 'employee-history' | 'excel-upload' | 'my-visits' | 'my-report';
 
 function AppContent() {
   console.log('AppContent component rendering');
-  const { t, dir, language } = useLanguage();
-  const { refreshData } = useData();
+  const { t, dir } = useLanguage();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
-  const [guestView, setGuestView] = useState<GuestViewType>('login');
-  const [resetToken, setResetToken] = useState<string>('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // Refresh data when user changes (login/load)
-  useEffect(() => {
-    // Check for reset token in URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    if (token) {
-      setResetToken(token);
-      setGuestView('reset-password');
-      // Clear URL params without refreshing
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    if (currentUser) {
-      refreshData();
-    }
-  }, [currentUser, refreshData]);
 
   useEffect(() => {
     let cancelled = false;
@@ -214,23 +187,7 @@ function AppContent() {
   }, [currentUser?.role]);
 
   if (!currentUser) {
-    if (guestView === 'forgot-password') {
-      return <ForgotPassword onBack={() => setGuestView('login')} />;
-    }
-    if (guestView === 'reset-password') {
-      return (
-        <ResetPassword
-          token={resetToken}
-          onSuccess={() => setGuestView('login')}
-        />
-      );
-    }
-    return (
-      <LoginScreen
-        onLogin={setCurrentUser}
-        onForgotPassword={() => setGuestView('forgot-password')}
-      />
-    );
+    return <LoginScreen onLogin={setCurrentUser} />;
   }
 
   const isDoctor = currentUser.role === 1;
@@ -280,15 +237,6 @@ function AppContent() {
                     <span className="font-medium text-sm">{t('my_visits')}</span>
                   </button>
                   <button
-                    onClick={() => { setCurrentView('my-report'); setIsSidebarOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${currentView === 'my-report' ? 'gradient-primary text-white shadow-soft' : 'text-gray-700 hover:bg-gray-50'}`}
-                  >
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${currentView === 'my-report' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'}`}>
-                      <FileText className={`w-5 h-5 ${currentView === 'my-report' ? 'text-white' : 'text-purple-600'}`} />
-                    </div>
-                    <span className="font-medium text-sm">{t('my_report')}</span>
-                  </button>
-                  <button
                     onClick={() => { setCurrentView('visits'); setIsSidebarOpen(false); }}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${currentView === 'visits' ? 'gradient-primary text-white shadow-soft' : 'text-gray-700 hover:bg-gray-50'}`}
                   >
@@ -296,6 +244,15 @@ function AppContent() {
                       <Calendar className={`w-5 h-5 ${currentView === 'visits' ? 'text-white' : 'text-blue-600'}`} />
                     </div>
                     <span className="font-medium text-sm">{t('calendar')}</span>
+                  </button>
+                  <button
+                    onClick={() => { setCurrentView('my-report'); setIsSidebarOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${currentView === 'my-report' ? 'gradient-primary text-white shadow-soft' : 'text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${currentView === 'my-report' ? 'bg-white/20' : 'bg-purple-50 group-hover:bg-purple-100'}`}>
+                      <FileText className={`w-5 h-5 ${currentView === 'my-report' ? 'text-white' : 'text-purple-600'}`} />
+                    </div>
+                    <span className="font-medium text-sm">{t('my_report')}</span>
                   </button>
                   <button
                     onClick={() => { setCurrentView('vacations'); setIsSidebarOpen(false); }}
@@ -314,15 +271,6 @@ function AppContent() {
                       <RefreshCw className={`w-5 h-5 ${currentView === 'swap-requests' ? 'text-white' : 'text-orange-600'}`} />
                     </div>
                     <span className="font-medium text-sm">{t('swap_requests')}</span>
-                  </button>
-                  <button
-                    onClick={() => { setCurrentView('tasks'); setIsSidebarOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${currentView === 'tasks' ? 'gradient-primary text-white shadow-soft' : 'text-gray-700 hover:bg-gray-50'}`}
-                  >
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${currentView === 'tasks' ? 'bg-white/20' : 'bg-rose-50 group-hover:bg-rose-100'}`}>
-                      <CheckSquare className={`w-5 h-5 ${currentView === 'tasks' ? 'text-white' : 'text-rose-600'}`} />
-                    </div>
-                    <span className="font-medium text-sm">{t('tasks')}</span>
                   </button>
                 </>
               ) : (
@@ -343,25 +291,7 @@ function AppContent() {
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${currentView === 'visits' ? 'bg-white/20' : 'bg-green-50 group-hover:bg-green-100'}`}>
                       <Calendar className={`w-5 h-5 ${currentView === 'visits' ? 'text-white' : 'text-green-600'}`} />
                     </div>
-                    <span className="font-medium text-sm">{t('calendar') || 'التقويم'}</span>
-                  </button>
-                  <button
-                    onClick={() => { setCurrentView('my-visits'); setIsSidebarOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${currentView === 'my-visits' ? 'gradient-primary text-white shadow-soft' : 'text-gray-700 hover:bg-gray-50'}`}
-                  >
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${currentView === 'my-visits' ? 'bg-white/20' : 'bg-blue-50 group-hover:bg-blue-100'}`}>
-                      <FileText className={`w-5 h-5 ${currentView === 'my-visits' ? 'text-white' : 'text-blue-600'}`} />
-                    </div>
-                    <span className="font-medium text-sm">{language === 'ar' ? 'قائمة الزيارات' : 'Visits List'}</span>
-                  </button>
-                  <button
-                    onClick={() => { setCurrentView('tasks'); setIsSidebarOpen(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${currentView === 'tasks' ? 'gradient-primary text-white shadow-soft' : 'text-gray-700 hover:bg-gray-50'}`}
-                  >
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${currentView === 'tasks' ? 'bg-white/20' : 'bg-rose-50 group-hover:bg-rose-100'}`}>
-                      <CheckSquare className={`w-5 h-5 ${currentView === 'tasks' ? 'text-white' : 'text-rose-600'}`} />
-                    </div>
-                    <span className="font-medium text-sm">{t('tasks')}</span>
+                    <span className="font-medium text-sm">{t('visits_table')}</span>
                   </button>
                   <button
                     onClick={() => { setCurrentView('add-visit'); setIsSidebarOpen(false); }}
@@ -428,13 +358,10 @@ function AppContent() {
 
           <div className="animate-fade-in">
             {currentView === 'dashboard' && !isDoctor && <Dashboard userRole={currentUser.role} />}
-            {(currentView === 'my-visits' || (isDoctor && currentView === 'dashboard')) && (
-              <MyVisits userId={currentUser.id} userRole={currentUser.role} />
-            )}
-            {currentView === 'visits' && <CalendarView userRole={currentUser.role} />}
+            {(currentView === 'my-visits' || (isDoctor && currentView === 'dashboard')) && <MyVisits userId={currentUser.id} />}
+            {currentView === 'visits' && <CalendarView userRole={currentUser.role} userId={isDoctor ? currentUser.id : undefined} />}
             {currentView === 'add-visit' && <AddVisitForm />}
             {currentView === 'my-report' && <MyReport userId={currentUser.id} />}
-            {currentView === 'tasks' && <TasksManagement user={currentUser} />}
             {currentView === 'employees' && currentUser.role === 0 && <EmployeesManagement />}
             {currentView === 'facilities' && currentUser.role === 0 && <FacilitiesManagement />}
             {currentView === 'programs' && currentUser.role === 0 && <ProgramsManagement />}

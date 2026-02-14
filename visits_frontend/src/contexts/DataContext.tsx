@@ -44,6 +44,8 @@ interface DataContextType {
   addSwapRequest: (swapRequest: Omit<SwapRequest, 'id'>) => Promise<void>;
   updateSwapRequest: (id: string, swapRequest: Partial<SwapRequest>) => Promise<void>;
   deleteSwapRequest: (id: string) => Promise<void>;
+  closeVisit: (id: string) => Promise<void>;
+  submitCorrectionPlan: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -81,11 +83,26 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
       const [visitsData, employeesData, facilitiesData, programsData, vacationsData, swapRequestsData] = await Promise.all([
         visitsPromise,
-        doctorApi.getAll().catch(() => []),
-        locationApi.getAll().catch(() => []),
-        programApi.getAll().catch(() => []),
-        vacationApi.getAll().catch(() => []),
-        swapRequestApi.getAll().catch(() => []),
+        doctorApi.getAll().catch((err) => {
+          console.error('❌ Failed to load employees:', err.message || err);
+          return [];
+        }),
+        locationApi.getAll().catch((err) => {
+          console.error('❌ Failed to load facilities:', err.message || err);
+          return [];
+        }),
+        programApi.getAll().catch((err) => {
+          console.error('❌ Failed to load programs:', err.message || err);
+          return [];
+        }),
+        vacationApi.getAll().catch((err) => {
+          console.error('❌ Failed to load vacations:', err.message || err);
+          return [];
+        }),
+        swapRequestApi.getAll().catch((err) => {
+          console.error('❌ Failed to load swap requests:', err.message || err);
+          return [];
+        }),
       ]);
 
       setVisits(visitsData.map(transformVisit));
@@ -116,9 +133,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const backendData = {
         location_id: parseInt(visit.facilityId),
         program_id: visit.programId ? parseInt(visit.programId) : null,
-        date: visit.scheduledDate,
-        end_date: visit.endDate || null,
-        hijri_date: (visit as any).hijriDate || null,
+        hijri_date: visit.scheduledDate, // scheduledDate now contains Hijri date
+        hijri_end_date: visit.endDate || null,
         duties: visit.tasks?.join(', ') || null,
         status: visit.status || 'scheduled',
         notes: visit.postponeReason || visit.infectionControl?.notes || null,
@@ -142,9 +158,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       const backendData: any = {};
       if (updatedVisit.facilityId) backendData.location_id = parseInt(updatedVisit.facilityId);
       if (updatedVisit.programId !== undefined) backendData.program_id = updatedVisit.programId ? parseInt(updatedVisit.programId) : null;
-      if (updatedVisit.scheduledDate) backendData.date = updatedVisit.scheduledDate;
-      if (updatedVisit.endDate !== undefined) backendData.end_date = updatedVisit.endDate || null;
-      if ((updatedVisit as any).hijriDate !== undefined) backendData.hijri_date = (updatedVisit as any).hijriDate || null;
+      if (updatedVisit.scheduledDate) backendData.hijri_date = updatedVisit.scheduledDate; // scheduledDate now contains Hijri date
+      if (updatedVisit.endDate !== undefined) backendData.hijri_end_date = updatedVisit.endDate || null;
       if (updatedVisit.tasks) backendData.duties = updatedVisit.tasks.join(', ');
       if (updatedVisit.status) backendData.status = updatedVisit.status;
       if (updatedVisit.postponeReason) backendData.notes = updatedVisit.postponeReason;
@@ -174,6 +189,28 @@ export function DataProvider({ children }: { children: ReactNode }) {
       throw err;
     }
   }, []);
+
+  const closeVisit = useCallback(async (id: string) => {
+    try {
+      await visitApi.closeVisit(parseInt(id));
+      await loadData(); // Refresh to get updated progress
+      toast.success('Visit closed successfully');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to close visit');
+      throw err;
+    }
+  }, [loadData]);
+
+  const submitCorrectionPlan = useCallback(async (id: string) => {
+    try {
+      await visitApi.submitCorrectionPlan(parseInt(id));
+      await loadData(); // Refresh to get updated progress
+      toast.success('Correction plan submitted successfully');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to submit correction plan');
+      throw err;
+    }
+  }, [loadData]);
 
   // Employee operations
   const addEmployee = useCallback(async (employee: Omit<Employee, 'id'>) => {
@@ -334,8 +371,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     try {
       const backendData = {
         doctor_id: parseInt(vacation.employeeId),
-        start_date: vacation.startDate,
-        end_date: vacation.endDate,
+        hijri_start_date: vacation.startDate, // startDate now contains Hijri date
+        hijri_end_date: vacation.endDate, // endDate now contains Hijri date
         reason: vacation.reason || null,
       };
 
@@ -353,8 +390,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     try {
       const backendData: any = {};
       if (updatedVacation.employeeId) backendData.doctor_id = parseInt(updatedVacation.employeeId);
-      if (updatedVacation.startDate) backendData.start_date = updatedVacation.startDate;
-      if (updatedVacation.endDate) backendData.end_date = updatedVacation.endDate;
+      if (updatedVacation.startDate) backendData.hijri_start_date = updatedVacation.startDate; // startDate now contains Hijri date
+      if (updatedVacation.endDate) backendData.hijri_end_date = updatedVacation.endDate; // endDate now contains Hijri date
       if (updatedVacation.reason !== undefined) backendData.reason = updatedVacation.reason;
       if (updatedVacation.status !== undefined) backendData.status = updatedVacation.status;
 
@@ -464,6 +501,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addSwapRequest,
     updateSwapRequest,
     deleteSwapRequest,
+    closeVisit,
+    submitCorrectionPlan,
   }), [
     visits,
     employees,
@@ -492,6 +531,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
     addSwapRequest,
     updateSwapRequest,
     deleteSwapRequest,
+    closeVisit,
+    submitCorrectionPlan,
   ]);
 
   return (

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Visit } from '../App';
 import { getEmployeeNames } from '../utils/dataHelpers';
@@ -21,33 +20,37 @@ interface VisitDetailsModalProps {
 }
 
 export function VisitDetailsModal({ visit, onClose, isOpen = true, onEdit, userRole }: VisitDetailsModalProps) {
-  const { employees, updateVisit } = useData();
+  const { employees, updateVisit, closeVisit, submitCorrectionPlan } = useData();
   const { t, language, dir } = useLanguage();
   const [isClosing, setIsClosing] = useState(false);
   const [report, setReport] = useState(visit.report || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState((visit as any).progress ?? 0);
 
   if (!isOpen) return null;
 
   const displayName = visit.facilityName ?? visit.name ?? '';
 
   const handleCloseVisit = async () => {
-    if (!report.trim()) {
-      toast.error(t('field_required'));
-      return;
-    }
-
     try {
       setIsSubmitting(true);
-      await updateVisit(visit.id, {
-        status: 'completed',
-        report: report
-      });
+      await closeVisit(visit.id);
+      setProgress(1);
+    } catch (error) {
+      // Error already handled in context
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-      toast.success(t('visit_closed_success'));
+  const handleSubmitCorrectionPlan = async () => {
+    try {
+      setIsSubmitting(true);
+      await submitCorrectionPlan(visit.id);
+      setProgress(2);
       onClose();
     } catch (error) {
-      toast.error(t('error_occurred'));
+      // Error already handled in context
     } finally {
       setIsSubmitting(false);
     }
@@ -232,13 +235,31 @@ export function VisitDetailsModal({ visit, onClose, isOpen = true, onEdit, userR
             </button>
 
             {visit.status !== 'completed' && !isClosing && (
-              <button
-                onClick={() => setIsClosing(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                <CheckSquare className="w-5 h-5" />
-                <span>{t('close_visit')}</span>
-              </button>
+              <>
+                {progress === 0 && (
+                  <button
+                    onClick={() => setIsClosing(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <CheckSquare className="w-5 h-5" />
+                    <span>{t('close_visit')}</span>
+                  </button>
+                )}
+                {progress === 1 && (
+                  <button
+                    onClick={handleSubmitCorrectionPlan}
+                    disabled={isSubmitting}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <CheckCircle className="w-5 h-5" />
+                    )}
+                    <span>{language === 'ar' ? 'تقديم خطة التصحيح' : 'Submit Correction Plan'}</span>
+                  </button>
+                )}
+              </>
             )}
 
             {onEdit && userRole !== 1 && (
@@ -271,14 +292,7 @@ export function VisitDetailsModal({ visit, onClose, isOpen = true, onEdit, userR
             </div>
 
             <div className="flex-1 p-6 overflow-y-auto">
-              <p className="text-gray-600 mb-4">{t('write_report_placeholder')}</p>
-              <textarea
-                value={report}
-                onChange={(e) => setReport(e.target.value)}
-                className="w-full h-48 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                placeholder={t('write_report_placeholder')}
-                dir={dir}
-              ></textarea>
+              <p className="text-gray-600">{language === 'ar' ? 'هل أنت متأكد من إغلاق هذه الزيارة؟' : 'Are you sure you want to close this visit?'}</p>
             </div>
 
             <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
@@ -289,8 +303,12 @@ export function VisitDetailsModal({ visit, onClose, isOpen = true, onEdit, userR
                 {t('cancel')}
               </button>
               <button
-                onClick={handleCloseVisit}
-                disabled={isSubmitting || !report.trim()}
+                onClick={async () => {
+                  await handleCloseVisit();
+                  setIsClosing(false);
+                  onClose();
+                }}
+                disabled={isSubmitting}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {isSubmitting ? (
@@ -298,7 +316,7 @@ export function VisitDetailsModal({ visit, onClose, isOpen = true, onEdit, userR
                 ) : (
                   <CheckCircle className="w-5 h-5" />
                 )}
-                <span>{t('submit_report')}</span>
+                <span>{language === 'ar' ? 'تأكيد الإغلاق' : 'Confirm Close'}</span>
               </button>
             </div>
           </div>

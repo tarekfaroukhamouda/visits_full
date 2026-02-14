@@ -10,7 +10,8 @@ export function getEmployeeNames(employeeIds: string[], employees: Employee[]): 
 
 // Helper function to get visit statistics
 export function getVisitStats(visits: Visit[]) {
-  const completed = visits.filter(v => v.status === 'completed').length;
+  // Completed visits: progress === 2 (correction plan submitted)
+  const completed = visits.filter(v => (v as any).progress === 2).length;
   const postponed = visits.filter(v => v.status === 'postponed').length;
   const scheduled = visits.filter(v => v.status === 'scheduled').length;
   const total = visits.length;
@@ -23,4 +24,5 @@ export function getVisitStats(visits: Visit[]) {
     completionRate: total > 0 ? Math.round((completed / total) * 100) : 0
   };
 }
+
 

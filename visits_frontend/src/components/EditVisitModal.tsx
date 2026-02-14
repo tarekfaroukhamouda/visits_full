@@ -4,6 +4,7 @@ import { useData } from '../contexts/DataContext';
 import { X, Save, Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { checkEmployeeAvailability } from '../utils/conflictChecker';
+import { HijriDateInput } from './HijriDateInput';
 
 interface EditVisitModalProps {
   visit: Visit;
@@ -201,11 +202,10 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
                 <label className="block text-gray-700 mb-2">
                   التاريخ المجدول <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="date"
+                <HijriDateInput
                   value={formData.scheduledDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, scheduledDate: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(value) => setFormData(prev => ({ ...prev, scheduledDate: value }))}
+                  placeholder="1446-08-15"
                   required
                 />
               </div>
@@ -214,12 +214,11 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
                 <label className="block text-gray-700 mb-2">
                   تاريخ النهاية
                 </label>
-                <input
-                  type="date"
+                <HijriDateInput
                   value={formData.endDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, endDate: e.target.value }))}
+                  onChange={(value) => setFormData(prev => ({ ...prev, endDate: value }))}
+                  placeholder="1446-08-20"
                   min={formData.scheduledDate}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
@@ -227,11 +226,10 @@ export function EditVisitModal({ visit, onClose }: EditVisitModalProps) {
                 <label className="block text-gray-700 mb-2">
                   التاريخ الفعلي
                 </label>
-                <input
-                  type="date"
+                <HijriDateInput
                   value={formData.actualDate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, actualDate: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(value) => setFormData(prev => ({ ...prev, actualDate: value }))}
+                  placeholder="1446-08-16"
                 />
               </div>
             </div>
