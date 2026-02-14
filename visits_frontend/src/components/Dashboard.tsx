@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useVisitStatus, useFormatDate } from '../utils/translations';
-import { getVisitStats, getEmployeeNames } from '../data/mockData';
+import { getVisitStats, getEmployeeNames } from '../utils/dataHelpers';
 import {
   CheckCircle,
   Clock,
@@ -74,6 +74,16 @@ export function Dashboard({ userRole }: DashboardProps) {
       color: COLORS.secondary
     },
     {
+      name: language === 'ar' ? 'خطة تصحيحية' : 'Correction Plan',
+      value: stats.submittedPlan,
+      color: COLORS.purple
+    },
+    {
+      name: language === 'ar' ? 'متأخرة' : 'Delayed',
+      value: stats.delayed,
+      color: COLORS.danger
+    },
+    {
       name: language === 'ar' ? 'مجدولة' : 'Scheduled',
       value: stats.scheduled,
       color: COLORS.primary
@@ -82,23 +92,8 @@ export function Dashboard({ userRole }: DashboardProps) {
       name: language === 'ar' ? 'مؤجلة' : 'Postponed',
       value: stats.postponed,
       color: COLORS.warning
-    },
-    {
-      name: language === 'ar' ? 'ملغاة' : 'Cancelled',
-      value: visits.filter(v => v.status === 'cancelled').length,
-      color: COLORS.danger
-    },
-    {
-      name: language === 'ar' ? 'غير مجدولة' : 'Unscheduled',
-      value: visits.filter(v => v.status === 'unscheduled').length,
-      color: COLORS.red
-    },
-    {
-      name: language === 'ar' ? 'غير مكتملة' : 'Incomplete',
-      value: visits.filter(v => v.status !== 'completed').length,
-      color: COLORS.yellow
     }
-  ], [stats, visits, language]);
+  ], [stats, language]);
 
   // Monthly visits trend
   const monthlyTrend = useMemo(() => {
@@ -154,18 +149,20 @@ export function Dashboard({ userRole }: DashboardProps) {
 
   const recentVisits = useMemo(() => {
     return visits
-      .filter(v => (v as any).progress === 2)
+      .filter(v => (v as any).progress === 1)
       .slice(0, 5);
   }, [visits]);
 
   const upcomingVisits = useMemo(() => {
     return visits
-      .filter(v => v.status === 'scheduled')
+      .filter(v => v.status === 'scheduled' && ((v as any).progress ?? 0) === 0)
       .slice(0, 5);
   }, [visits]);
 
-  const unscheduledVisits = visits.filter(v => v.status === 'unscheduled').length;
-  const incompleteVisits = visits.filter(v => (v as any).progress === 1).length;
+  const unscheduledCount = visits.filter(v => v.status === 'unscheduled').length;
+  const waitingForPlanVisits = visits.filter(v => (v as any).progress === 1).length;
+  const planSubmittedVisits = visits.filter(v => (v as any).progress === 2).length;
+  const postponedCount = visits.filter(v => v.status === 'postponed').length;
 
   return (
     <div className="space-y-6">
@@ -191,7 +188,7 @@ export function Dashboard({ userRole }: DashboardProps) {
       </div>
 
       {/* Main Statistics Cards with Animation */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-4">
         {/* Total Visits */}
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
           <div className="flex items-center justify-between mb-4">
@@ -200,7 +197,7 @@ export function Dashboard({ userRole }: DashboardProps) {
             </div>
             <span className="text-4xl font-bold">{stats.total}</span>
           </div>
-          <h3 className="text-lg opacity-90 mb-1">{t('total_visits')}</h3>
+          <h3 className="text-lg opacity-90 mb-1 font-bold">{t('total_visits')}</h3>
         </div>
 
         {/* Completed Visits */}
@@ -211,7 +208,46 @@ export function Dashboard({ userRole }: DashboardProps) {
             </div>
             <span className="text-4xl font-bold">{stats.completed}</span>
           </div>
-          <h3 className="text-lg opacity-90 mb-1">{t('completed')}</h3>
+          <h3 className="text-lg opacity-90 mb-1 font-bold">{t('completed')}</h3>
+        </div>
+
+        {/* Plan Submitted */}
+        <div style={{ backgroundColor: '#5b21b6' }} className="rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-transform overflow-hidden relative">
+          <div className="flex items-center justify-between mb-4 p-3 bg-white/10 rounded-xl border border-white/20">
+            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-7 h-7" />
+            </div>
+            <span className="text-4xl font-bold text-white">{planSubmittedVisits}</span>
+          </div>
+          <h3 className="text-xl mb-1 font-bold text-white">
+            {language === 'ar' ? 'تم تقديم الخطة' : 'Plan Submitted'}
+          </h3>
+        </div>
+
+        {/* Delayed Visits */}
+        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+              <AlertCircle className="w-7 h-7" />
+            </div>
+            <span className="text-4xl font-bold">{stats.delayed}</span>
+          </div>
+          <h3 className="text-lg opacity-90 mb-1 font-bold">
+            {language === 'ar' ? 'زيارات متأخرة' : 'Delayed Visits'}
+          </h3>
+        </div>
+
+        {/* Postponed Visits */}
+        <div style={{ backgroundColor: '#0f172a' }} className="rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-transform overflow-hidden relative">
+          <div className="flex items-center justify-between mb-4 p-3 bg-white/10 rounded-xl border border-white/20">
+            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+              <Clock className="w-7 h-7" />
+            </div>
+            <span className="text-4xl font-bold text-white">{postponedCount}</span>
+          </div>
+          <h3 className="text-xl mb-1 font-bold text-white">
+            {language === 'ar' ? 'مؤجلة' : 'Postponed'}
+          </h3>
         </div>
 
         {/* Scheduled Visits */}
@@ -222,30 +258,19 @@ export function Dashboard({ userRole }: DashboardProps) {
             </div>
             <span className="text-4xl font-bold">{stats.scheduled}</span>
           </div>
-          <h3 className="text-lg opacity-90 mb-1">{t('scheduled')}</h3>
-        </div>
-
-        {/* Unscheduled Visits */}
-        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-              <XCircle className="w-7 h-7" />
-            </div>
-            <span className="text-4xl font-bold">{unscheduledVisits}</span>
-          </div>
-          <h3 className="text-lg opacity-90 mb-1">{t('unscheduled_visits')}</h3>
+          <h3 className="text-lg opacity-90 mb-1 font-bold">{t('scheduled')}</h3>
         </div>
 
         {/* Waiting for Correction Plan */}
         <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-6 text-black transform hover:scale-105 transition-transform">
           <div className="flex items-center justify-between mb-4">
-            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-              <AlertCircle className="w-7 h-7" />
+            <div className="w-14 h-14 bg-black/10 backdrop-blur-sm rounded-lg flex items-center justify-center">
+              <FileX className="w-7 h-7" />
             </div>
-            <span className="text-4xl font-bold">{incompleteVisits}</span>
+            <span className="text-4xl font-bold">{waitingForPlanVisits}</span>
           </div>
-          <h3 className="text-lg opacity-90 mb-1">
-            {language === 'ar' ? 'بانتظار خطة التصحيح' : 'Waiting for Correction Plan'}
+          <h3 className="text-lg opacity-90 mb-1 font-bold text-black/80">
+            {language === 'ar' ? 'بانتظار الخطة' : 'Waiting for Plan'}
           </h3>
         </div>
       </div>
@@ -253,10 +278,10 @@ export function Dashboard({ userRole }: DashboardProps) {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Status Distribution Pie Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg shadow-md p-6 border border-indigo-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Target className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <Target className="w-5 h-5 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
               {language === 'ar' ? 'توزيع حالات الزيارات' : 'Visit Status Distribution'}
@@ -294,10 +319,10 @@ export function Dashboard({ userRole }: DashboardProps) {
         </div>
 
         {/* Completion Rate Radial Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg shadow-md p-6 border border-emerald-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <Award className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
+              <Award className="w-5 h-5 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
               {language === 'ar' ? 'مؤشر الأداء العام' : 'Overall Performance Index'}
@@ -343,10 +368,10 @@ export function Dashboard({ userRole }: DashboardProps) {
         </div>
 
         {/* Monthly Trend Line Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-lg shadow-md p-6 border border-sky-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
               {language === 'ar' ? 'الاتجاه الشهري للزيارات' : 'Monthly Visits Trend'}
@@ -363,6 +388,10 @@ export function Dashboard({ userRole }: DashboardProps) {
                 <linearGradient id="colorScheduled" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.8} />
                   <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="colorPostponed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={COLORS.warning} stopOpacity={0.8} />
+                  <stop offset="95%" stopColor={COLORS.warning} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" />
@@ -385,15 +414,23 @@ export function Dashboard({ userRole }: DashboardProps) {
                 fill="url(#colorScheduled)"
                 name={language === 'ar' ? 'مجدولة' : 'Scheduled'}
               />
+              <Area
+                type="monotone"
+                dataKey="postponed"
+                stroke={COLORS.warning}
+                fillOpacity={1}
+                fill="url(#colorPostponed)"
+                name={language === 'ar' ? 'مؤجلة' : 'Postponed'}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
         {/* Programs Performance Bar Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-lg shadow-md p-6 border border-violet-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Layers className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 bg-violet-600 rounded-lg flex items-center justify-center">
+              <Layers className="w-5 h-5 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
               {language === 'ar' ? 'أداء البرامج' : 'Programs Performance'}
@@ -424,10 +461,10 @@ export function Dashboard({ userRole }: DashboardProps) {
         </div>
 
         {/* Facility Distribution */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg shadow-md p-6 border border-amber-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-amber-600" />
+            <div className="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
               {language === 'ar' ? 'توزيع المنشآت' : 'Facilities Distribution'}
@@ -477,7 +514,7 @@ export function Dashboard({ userRole }: DashboardProps) {
           </div>
 
           <div className="space-y-4">
-            <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="bg-white/50 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-600">{language === 'ar' ? 'إجمالي الموظفين' : 'Total Employees'}</span>
                 <span className="text-2xl font-bold text-purple-600">{employees.length}</span>
@@ -487,7 +524,7 @@ export function Dashboard({ userRole }: DashboardProps) {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="bg-white/50 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-600">{language === 'ar' ? 'إجمالي المنشآت' : 'Total Facilities'}</span>
                 <span className="text-2xl font-bold text-amber-600">{facilities.length}</span>
@@ -497,7 +534,7 @@ export function Dashboard({ userRole }: DashboardProps) {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="bg-white/50 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-600">{language === 'ar' ? 'البرامج النشطة' : 'Active Programs'}</span>
                 <span className="text-2xl font-bold text-blue-600">{programs.length}</span>
@@ -507,7 +544,7 @@ export function Dashboard({ userRole }: DashboardProps) {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="bg-white/50 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-600">{language === 'ar' ? 'متوسط نسبة الإنجاز' : 'Avg. Completion'}</span>
                 <span className="text-2xl font-bold text-green-600">{stats.completionRate}%</span>
@@ -522,24 +559,24 @@ export function Dashboard({ userRole }: DashboardProps) {
           </div>
         </div>
 
-        {/* Incomplete Visits Block */}
-        <div className="bg-yellow-100 rounded-lg shadow-md p-6 border border-yellow-200">
+        {/* Delayed Visits Block */}
+        <div className="bg-red-50 rounded-lg shadow-md p-6 border border-red-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-yellow-200 rounded-lg flex items-center justify-center">
-              <AlertCircle className="w-5 h-5 text-yellow-600" />
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-red-600" />
             </div>
-            <h3 className="text-lg font-semibold text-yellow-900">
-              {t('incomplete_visits')}
+            <h3 className="text-lg font-semibold text-red-900">
+              {language === 'ar' ? 'الزيارات المتأخرة' : 'Delayed Visits'}
             </h3>
           </div>
-          <p className="text-3xl font-bold text-yellow-600">{incompleteVisits}</p>
+          <p className="text-3xl font-bold text-red-600">{stats.delayed}</p>
         </div>
       </div>
 
       {/* Recent & Upcoming Visits */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Completed Visits */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg shadow-md p-6 border border-slate-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('recent_visits')}</h3>
           <div className="space-y-3">
             {recentVisits.map((visit) => {
@@ -566,7 +603,7 @@ export function Dashboard({ userRole }: DashboardProps) {
         </div>
 
         {/* Upcoming Scheduled Visits */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg shadow-md p-6 border border-slate-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('upcoming_visits')}</h3>
           <div className="space-y-3">
             {upcomingVisits.map((visit) => {

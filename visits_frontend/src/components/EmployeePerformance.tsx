@@ -1,57 +1,48 @@
 import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
-import { useData } from '../contexts/DataContext';
+import { useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { BarChart3, Calendar, FileDown, MapPin, Layers } from 'lucide-react';
+import { doctorApi } from '../services/api';
+import { HijriDateInput } from './HijriDateInput';
 import { toast } from 'sonner@2.0.3';
 
 export function EmployeePerformance() {
-  const { employees, visits, programs } = useData();
   const { t, language } = useLanguage();
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [performanceData, setPerformanceData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const performanceData = useMemo(() => {
-    return employees.map(employee => {
-      let employeeVisits = visits.filter(v => v.assignedEmployees.includes(employee.id));
+  // Fetch performance data from backend
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        // Pass Hijri dates directly to backend
+        const data = await doctorApi.getPerformanceStats(fromDate || undefined, toDate || undefined);
 
-      // Filter by date range if provided
-      if (fromDate && toDate) {
-        employeeVisits = employeeVisits.filter(v => {
-          const visitDate = new Date(v.scheduledDate);
-          return visitDate >= new Date(fromDate) && visitDate <= new Date(toDate);
-        });
+        // Transform data to match language preferences for program names
+        const formattedData = data.map((item: any) => ({
+          ...item,
+          byProgram: item.byProgram.map((p: any) => ({
+            ...p,
+            programName: language === 'ar' ? p.programName : p.programNameEn
+          }))
+        }));
+
+        setPerformanceData(formattedData);
+      } catch (error) {
+        console.error('Error fetching performance stats:', error);
+        toast.error(t('error_loading_data') || 'Failed to load data');
+      } finally {
+        setLoading(false);
       }
+    }
 
-      const totalVisits = employeeVisits.length;
-      const completedVisits = employeeVisits.filter(v => v.status === 'completed').length;
-      const completionRate = totalVisits > 0 ? Math.round((completedVisits / totalVisits) * 100) : 0;
+    fetchData();
+  }, [fromDate, toDate, language, t]);
 
-      // By Program
-      const byProgram = programs.map(program => ({
-        programId: program.id,
-        programName: language === 'ar' ? program.name : program.nameEn,
-        count: employeeVisits.filter(v => v.programId === program.id && v.status === 'completed').length
-      })).filter(p => p.count > 0);
-
-      // By Location
-      const insideTaif = employeeVisits.filter(v => v.location === 'inside-taif' && v.status === 'completed').length;
-      const outsideTaif = employeeVisits.filter(v => v.location === 'outside-taif' && v.status === 'completed').length;
-
-      return {
-        employeeId: employee.id,
-        employeeName: employee.name,
-        totalVisits,
-        completedVisits,
-        completionRate,
-        byProgram,
-        byLocation: {
-          insideTaif,
-          outsideTaif
-        }
-      };
-    }).filter(data => data.totalVisits > 0);
-  }, [employees, visits, programs, fromDate, toDate, language]);
 
   const handleExport = () => {
     if (performanceData.length === 0) {
@@ -62,7 +53,9 @@ export function EmployeePerformance() {
     const exportRows = performanceData.map((row) => ({
       [t('employee_name')]: row.employeeName,
       [t('total_visits')]: row.totalVisits,
-      [t('completed_visits')]: row.completedVisits,
+      [t('completed_visits')]: row.totalCompleted,
+      [t('waiting_for_plan')]: row.waitingForPlan,
+      [t('plan_submitted')]: row.completedWithPlan,
       [t('completion_rate')]: row.completionRate + '%',
       [t('inside_taif')]: row.byLocation.insideTaif,
       [t('outside_taif')]: row.byLocation.outsideTaif,
@@ -100,25 +93,25 @@ export function EmployeePerformance() {
           <Calendar className="w-5 h-5 text-gray-600" />
           <h3 className="text-gray-900">{t('select_period')}</h3>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-gray-700 mb-2">{t('from_date')}</label>
-            <input
-              type="date"
+            <HijriDateInput
               value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={setFromDate}
+              className="w-full"
+              placeholder="YYYY-MM-DD"
             />
           </div>
 
           <div>
             <label className="block text-gray-700 mb-2">{t('to_date')}</label>
-            <input
-              type="date"
+            <HijriDateInput
               value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              onChange={setToDate}
+              className="w-full"
+              placeholder="YYYY-MM-DD"
             />
           </div>
 
@@ -152,17 +145,29 @@ export function EmployeePerformance() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                <div className="text-center">
-                  <p className="text-2xl text-blue-600">{data.completedVisits}</p>
-                  <p className="text-xs text-gray-600">{t('completed_visits')}</p>
-                </div>
+              <div className="flex flex-wrap items-center gap-4 md:gap-8">
                 <div className="text-center">
                   <p className="text-2xl text-gray-900">{data.totalVisits}</p>
                   <p className="text-xs text-gray-600">{t('total_visits_assigned')}</p>
                 </div>
+
                 <div className="text-center">
-                  <p className="text-2xl text-green-600">{data.completionRate}%</p>
+                  <p className="text-2xl text-blue-600">{data.totalCompleted}</p>
+                  <p className="text-xs text-gray-600">{t('completed_visits')}</p>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-2xl text-amber-500">{data.waitingForPlan}</p>
+                  <p className="text-xs text-gray-600">{t('waiting_for_plan')}</p>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-2xl text-green-600">{data.completedWithPlan}</p>
+                  <p className="text-xs text-gray-600">{t('plan_submitted')}</p>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-2xl text-indigo-600">{data.completionRate}%</p>
                   <p className="text-xs text-gray-600">{t('task_completion')}</p>
                 </div>
               </div>
@@ -176,10 +181,9 @@ export function EmployeePerformance() {
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3">
                 <div
-                  className={`h-3 rounded-full transition-all ${
-                    data.completionRate >= 80 ? 'bg-green-500' :
+                  className={`h-3 rounded-full transition-all ${data.completionRate >= 80 ? 'bg-green-500' :
                     data.completionRate >= 50 ? 'bg-blue-500' : 'bg-amber-500'
-                  }`}
+                    }`}
                   style={{ width: `${data.completionRate}%` }}
                 />
               </div>

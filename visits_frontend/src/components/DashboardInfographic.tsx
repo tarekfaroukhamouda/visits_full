@@ -3,10 +3,10 @@ import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useVisitStatus, useFormatDate } from '../utils/translations';
 import { getVisitStats, getEmployeeNames } from '../utils/dataHelpers';
-import { 
-  CheckCircle, 
-  Clock, 
-  Calendar, 
+import {
+  CheckCircle,
+  Clock,
+  Calendar,
   AlertCircle,
   TrendingUp,
   Users,
@@ -63,34 +63,39 @@ export function Dashboard({ userRole }: DashboardProps) {
 
   // Status distribution data
   const statusData = useMemo(() => [
-    { 
-      name: language === 'ar' ? 'مكتملة' : 'Completed', 
-      value: stats.completed, 
-      color: COLORS.secondary 
+    {
+      name: language === 'ar' ? 'مكتملة' : 'Completed',
+      value: stats.completed,
+      color: COLORS.secondary
     },
-    { 
-      name: language === 'ar' ? 'مجدولة' : 'Scheduled', 
-      value: stats.scheduled, 
-      color: COLORS.primary 
+    {
+      name: language === 'ar' ? 'خطة تصحيحية' : 'Correction Plan',
+      value: stats.submittedPlan,
+      color: COLORS.purple
     },
-    { 
-      name: language === 'ar' ? 'مؤجلة' : 'Postponed', 
-      value: stats.postponed, 
-      color: COLORS.warning 
+    {
+      name: language === 'ar' ? 'متأخرة' : 'Delayed',
+      value: stats.delayed,
+      color: COLORS.danger
     },
-    { 
-      name: language === 'ar' ? 'ملغاة' : 'Cancelled', 
-      value: visits.filter(v => v.status === 'cancelled').length, 
-      color: COLORS.danger 
+    {
+      name: language === 'ar' ? 'مجدولة' : 'Scheduled',
+      value: stats.scheduled,
+      color: COLORS.primary
+    },
+    {
+      name: language === 'ar' ? 'مؤجلة' : 'Postponed',
+      value: stats.postponed,
+      color: COLORS.warning
     }
-  ], [stats, visits, language]);
+  ], [stats, language]);
 
   // Monthly visits trend
   const monthlyTrend = useMemo(() => {
-    const months = language === 'ar' 
+    const months = language === 'ar'
       ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو']
       : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    
+
     return months.map((month, index) => ({
       month,
       completed: Math.floor(Math.random() * 20) + 10,
@@ -100,32 +105,32 @@ export function Dashboard({ userRole }: DashboardProps) {
   }, [language]);
 
   // Programs performance data
-  const programsData = useMemo(() => 
+  const programsData = useMemo(() =>
     programs.map(program => ({
       name: language === 'ar' ? program.name : program.nameEn,
       completed: program.completedVisits || 0,
       target: program.targetVisits,
-      percentage: program.targetVisits > 0 
-        ? Math.round(((program.completedVisits || 0) / program.targetVisits) * 100) 
+      percentage: program.targetVisits > 0
+        ? Math.round(((program.completedVisits || 0) / program.targetVisits) * 100)
         : 0
     }))
-  , [programs, language]);
+    , [programs, language]);
 
   // Facility type distribution
   const facilityTypeData = useMemo(() => {
     const government = facilities.filter(f => f.type === 'government').length;
     const privateCount = facilities.filter(f => f.type === 'private').length;
-    
+
     return [
-      { 
-        name: language === 'ar' ? 'حكومي' : 'Government', 
-        value: government, 
-        color: COLORS.primary 
+      {
+        name: language === 'ar' ? 'حكومي' : 'Government',
+        value: government,
+        color: COLORS.primary
       },
-      { 
-        name: language === 'ar' ? 'خاص' : 'Private', 
-        value: privateCount, 
-        color: COLORS.accent 
+      {
+        name: language === 'ar' ? 'خاص' : 'Private',
+        value: privateCount,
+        color: COLORS.accent
       }
     ];
   }, [facilities, language]);
@@ -139,13 +144,13 @@ export function Dashboard({ userRole }: DashboardProps) {
 
   const recentVisits = useMemo(() => {
     return visits
-      .filter(v => v.status === 'completed')
+      .filter(v => (v as any).progress === 1)
       .slice(0, 5);
   }, [visits]);
 
   const upcomingVisits = useMemo(() => {
     return visits
-      .filter(v => v.status === 'scheduled')
+      .filter(v => v.status === 'scheduled' && ((v as any).progress ?? 0) === 0)
       .slice(0, 5);
   }, [visits]);
 
@@ -157,8 +162,8 @@ export function Dashboard({ userRole }: DashboardProps) {
           <div>
             <h2 className="text-2xl mb-2">{language === 'ar' ? 'لوحة المعلومات' : 'Dashboard'}</h2>
             <p className="text-blue-100">
-              {language === 'ar' 
-                ? 'نظرة تحليلية شاملة على الزيارات ومكافحة العدوى' 
+              {language === 'ar'
+                ? 'نظرة تحليلية شاملة على الزيارات ومكافحة العدوى'
                 : 'Comprehensive analytical overview of visits and infection control'}
             </p>
           </div>
@@ -167,7 +172,8 @@ export function Dashboard({ userRole }: DashboardProps) {
       </div>
 
       {/* Main Statistics Cards with Animation */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Main Statistics Cards with Animation */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
           <div className="flex items-center justify-between mb-4">
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
@@ -198,16 +204,18 @@ export function Dashboard({ userRole }: DashboardProps) {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
-          <div className="flex items-center justify-between mb-4">
+        <div style={{ backgroundColor: '#4c1d95' }} className="rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-transform overflow-hidden relative">
+          <div className="flex items-center justify-between mb-4 p-3 bg-white/10 rounded-xl border border-white/20">
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
-              <Clock className="w-7 h-7" />
+              <TrendingUp className="w-7 h-7" />
             </div>
-            <span className="text-4xl font-bold">{stats.scheduled}</span>
+            <span className="text-4xl font-bold text-white">{stats.submittedPlan}</span>
           </div>
-          <h3 className="text-lg opacity-90 mb-1">{t('scheduled')}</h3>
-          <p className="text-sm opacity-75">
-            {language === 'ar' ? 'في انتظار التنفيذ' : 'Pending Execution'}
+          <h3 className="text-xl mb-1 font-bold text-white">
+            {language === 'ar' ? 'خطة تصحيحية' : 'Correction Plan'}
+          </h3>
+          <p className="text-sm text-white/80">
+            {language === 'ar' ? 'تم تقديم الخطط' : 'Plans Submitted'}
           </p>
         </div>
 
@@ -216,11 +224,41 @@ export function Dashboard({ userRole }: DashboardProps) {
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
               <AlertCircle className="w-7 h-7" />
             </div>
-            <span className="text-4xl font-bold">{stats.postponed}</span>
+            <span className="text-4xl font-bold">{stats.delayed}</span>
           </div>
-          <h3 className="text-lg opacity-90 mb-1">{t('postponed')}</h3>
+          <h3 className="text-lg opacity-90 mb-1">
+            {language === 'ar' ? 'زيارات متأخرة' : 'Delayed Visits'}
+          </h3>
           <p className="text-sm opacity-75">
-            {language === 'ar' ? 'تحتاج متابعة عاجلة' : 'Requires Urgent Follow-up'}
+            {language === 'ar' ? 'تجاوزت الموعد المحدد' : 'Past Scheduled Date'}
+          </p>
+        </div>
+
+        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+              <Clock className="w-7 h-7" />
+            </div>
+            <span className="text-4xl font-bold">{stats.scheduled}</span>
+          </div>
+          <h3 className="text-lg opacity-90 mb-1 font-bold">{t('scheduled')}</h3>
+          <p className="text-sm opacity-75">
+            {language === 'ar' ? 'في انتظار التنفيذ' : 'Pending Execution'}
+          </p>
+        </div>
+
+        <div style={{ backgroundColor: '#0f172a' }} className="rounded-lg shadow-lg p-6 text-white transform hover:scale-105 transition-transform overflow-hidden relative">
+          <div className="flex items-center justify-between mb-4 p-3 bg-white/10 rounded-xl border border-white/20">
+            <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+              <Clock className="w-7 h-7" />
+            </div>
+            <span className="text-4xl font-bold text-white">{stats.postponed}</span>
+          </div>
+          <h3 className="text-xl mb-1 font-bold text-white">
+            {language === 'ar' ? 'مؤجلة' : 'Postponed'}
+          </h3>
+          <p className="text-sm text-white/80">
+            {language === 'ar' ? 'تم تأجيلها' : 'Visits Postponed'}
           </p>
         </div>
       </div>
@@ -228,16 +266,16 @@ export function Dashboard({ userRole }: DashboardProps) {
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Status Distribution Pie Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-lg shadow-md p-6 border border-indigo-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Target className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
+              <Target className="w-5 h-5 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
               {language === 'ar' ? 'توزيع حالات الزيارات' : 'Visit Status Distribution'}
             </h3>
           </div>
-          
+
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
@@ -269,39 +307,37 @@ export function Dashboard({ userRole }: DashboardProps) {
         </div>
 
         {/* Completion Rate Radial Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-lg shadow-md p-6 border border-emerald-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <Award className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
+              <Award className="w-5 h-5 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
               {language === 'ar' ? 'مؤشر الأداء العام' : 'Overall Performance Index'}
             </h3>
           </div>
-          
+
           <ResponsiveContainer width="100%" height={300}>
-            <RadialBarChart 
-              cx="50%" 
-              cy="50%" 
-              innerRadius="60%" 
-              outerRadius="100%" 
-              barSize={30} 
+            <RadialBarChart
+              cx="50%"
+              cy="50%"
+              innerRadius="60%"
+              outerRadius="100%"
+              barSize={30}
               data={completionRadialData}
               startAngle={180}
               endAngle={0}
             >
               <RadialBar
-                minAngle={15}
                 background
-                clockWise
                 dataKey="value"
                 cornerRadius={10}
               />
-              <text 
-                x="50%" 
-                y="50%" 
-                textAnchor="middle" 
-                dominantBaseline="middle" 
+              <text
+                x="50%"
+                y="50%"
+                textAnchor="middle"
+                dominantBaseline="middle"
                 className="text-4xl font-bold"
                 fill={COLORS.secondary}
               >
@@ -312,7 +348,7 @@ export function Dashboard({ userRole }: DashboardProps) {
 
           <div className="text-center mt-4">
             <p className="text-sm text-gray-600">
-              {language === 'ar' 
+              {language === 'ar'
                 ? `${stats.completed} من ${stats.total} زيارة مكتملة`
                 : `${stats.completed} of ${stats.total} visits completed`}
             </p>
@@ -320,63 +356,75 @@ export function Dashboard({ userRole }: DashboardProps) {
         </div>
 
         {/* Monthly Trend Line Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-sky-50 to-blue-50 rounded-lg shadow-md p-6 border border-sky-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
               {language === 'ar' ? 'الاتجاه الشهري للزيارات' : 'Monthly Visits Trend'}
             </h3>
           </div>
-          
+
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart data={monthlyTrend}>
               <defs>
                 <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={COLORS.secondary} stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor={COLORS.secondary} stopOpacity={0}/>
+                  <stop offset="5%" stopColor={COLORS.secondary} stopOpacity={0.8} />
+                  <stop offset="95%" stopColor={COLORS.secondary} stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorScheduled" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0}/>
+                  <stop offset="5%" stopColor={COLORS.primary} stopOpacity={0.8} />
+                  <stop offset="95%" stopColor={COLORS.primary} stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="colorPostponed" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={COLORS.warning} stopOpacity={0.8} />
+                  <stop offset="95%" stopColor={COLORS.warning} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip />
-              <Area 
-                type="monotone" 
-                dataKey="completed" 
-                stroke={COLORS.secondary} 
-                fillOpacity={1} 
-                fill="url(#colorCompleted)" 
+              <Area
+                type="monotone"
+                dataKey="completed"
+                stroke={COLORS.secondary}
+                fillOpacity={1}
+                fill="url(#colorCompleted)"
                 name={language === 'ar' ? 'مكتملة' : 'Completed'}
               />
-              <Area 
-                type="monotone" 
-                dataKey="scheduled" 
-                stroke={COLORS.primary} 
-                fillOpacity={1} 
+              <Area
+                type="monotone"
+                dataKey="scheduled"
+                stroke={COLORS.primary}
+                fillOpacity={1}
                 fill="url(#colorScheduled)"
                 name={language === 'ar' ? 'مجدولة' : 'Scheduled'}
+              />
+              <Area
+                type="monotone"
+                dataKey="postponed"
+                stroke={COLORS.warning}
+                fillOpacity={1}
+                fill="url(#colorPostponed)"
+                name={language === 'ar' ? 'مؤجلة' : 'Postponed'}
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
         {/* Programs Performance Bar Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-lg shadow-md p-6 border border-violet-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Layers className="w-5 h-5 text-purple-600" />
+            <div className="w-10 h-10 bg-violet-600 rounded-lg flex items-center justify-center">
+              <Layers className="w-5 h-5 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
               {language === 'ar' ? 'أداء البرامج' : 'Programs Performance'}
             </h3>
           </div>
-          
+
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={programsData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -384,15 +432,15 @@ export function Dashboard({ userRole }: DashboardProps) {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar 
-                dataKey="completed" 
-                fill={COLORS.secondary} 
+              <Bar
+                dataKey="completed"
+                fill={COLORS.secondary}
                 name={language === 'ar' ? 'منجز' : 'Completed'}
                 radius={[8, 8, 0, 0]}
               />
-              <Bar 
-                dataKey="target" 
-                fill={COLORS.accent} 
+              <Bar
+                dataKey="target"
+                fill={COLORS.accent}
                 name={language === 'ar' ? 'المستهدف' : 'Target'}
                 radius={[8, 8, 0, 0]}
               />
@@ -401,10 +449,10 @@ export function Dashboard({ userRole }: DashboardProps) {
         </div>
 
         {/* Facility Distribution */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg shadow-md p-6 border border-amber-100">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-amber-600" />
+            <div className="w-10 h-10 bg-amber-600 rounded-lg flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-gray-900">
               {language === 'ar' ? 'توزيع المنشآت' : 'Facilities Distribution'}
@@ -454,7 +502,7 @@ export function Dashboard({ userRole }: DashboardProps) {
           </div>
 
           <div className="space-y-4">
-            <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="bg-white/50 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-600">{language === 'ar' ? 'إجمالي الموظفين' : 'Total Employees'}</span>
                 <span className="text-2xl font-bold text-purple-600">{employees.length}</span>
@@ -464,7 +512,7 @@ export function Dashboard({ userRole }: DashboardProps) {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="bg-white/50 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-600">{language === 'ar' ? 'إجمالي المنشآت' : 'Total Facilities'}</span>
                 <span className="text-2xl font-bold text-amber-600">{facilities.length}</span>
@@ -474,7 +522,7 @@ export function Dashboard({ userRole }: DashboardProps) {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="bg-white/50 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-600">{language === 'ar' ? 'البرامج النشطة' : 'Active Programs'}</span>
                 <span className="text-2xl font-bold text-blue-600">{programs.length}</span>
@@ -484,15 +532,15 @@ export function Dashboard({ userRole }: DashboardProps) {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="bg-white/50 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-white/20">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-600">{language === 'ar' ? 'متوسط نسبة الإنجاز' : 'Avg. Completion'}</span>
                 <span className="text-2xl font-bold text-green-600">{stats.completionRate}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-green-600 h-2 rounded-full transition-all" 
-                  style={{ width: `${stats.completionRate}%` }} 
+                <div
+                  className="bg-green-600 h-2 rounded-full transition-all"
+                  style={{ width: `${stats.completionRate}%` }}
                 />
               </div>
             </div>
@@ -503,7 +551,7 @@ export function Dashboard({ userRole }: DashboardProps) {
       {/* Recent & Upcoming Visits */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Completed Visits */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg shadow-md p-6 border border-slate-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('recent_visits')}</h3>
           <div className="space-y-3">
             {recentVisits.map((visit) => {
@@ -530,7 +578,7 @@ export function Dashboard({ userRole }: DashboardProps) {
         </div>
 
         {/* Upcoming Scheduled Visits */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-gradient-to-br from-slate-50 to-gray-50 rounded-lg shadow-md p-6 border border-slate-200">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('upcoming_visits')}</h3>
           <div className="space-y-3">
             {upcomingVisits.map((visit) => {

@@ -150,6 +150,13 @@ export const doctorApi = {
     method: 'POST',
     body: JSON.stringify(data),
   }),
+  getPerformanceStats: (startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    return apiRequest<any[]>(`/doctors/performance${query}`);
+  },
 };
 
 // Location API

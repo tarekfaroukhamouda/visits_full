@@ -6,8 +6,9 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useData } from '../contexts/DataContext';
 import { Visit } from '../App';
 import { excelUploadApi } from '../services/api';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { parseHijriDate } from '../utils/hijriUtils';
 
 interface ExcelRow {
   facilityName: string;
@@ -96,7 +97,7 @@ export function ExcelUploadVisits() {
           facilityName: row['اسم المنشأة'] || row['Facility Name'] || row['facilityName'] || '',
           type: row['نوع المنشأة'] || row['Type'] || row['type'] || '',
           location: row['الموقع'] || row['Location'] || row['location'] || '',
-          scheduledDate: row['التاريخ'] || row['Date'] || row['scheduledDate'] || '',
+          scheduledDate: row['التاريخ (هجري)'] || row['التاريخ'] || row['Date'] || row['scheduledDate'] || '',
           assignedEmployees: row['الموظفين'] || row['Employees'] || row['assignedEmployees'] || '',
           program: row['البرنامج'] || row['Program'] || row['program'] || '',
           status: row['الحالة'] || row['Status'] || row['status'] || 'scheduled',
@@ -151,20 +152,23 @@ export function ExcelUploadVisits() {
         });
       }
 
-      // Validate date
-      if (!row.scheduledDate || row.scheduledDate.trim() === '') {
+      // Validate date (Hijri)
+      if (!row.scheduledDate || row.scheduledDate.toString().trim() === '') {
         errors.push({
           row: rowNum,
           field: t('scheduled_date'),
           message: t('field_required')
         });
       } else {
-        const date = new Date(row.scheduledDate);
-        if (isNaN(date.getTime())) {
+        const dateStr = row.scheduledDate.toString();
+        // Check if it's a valid Hijri date
+        const parsed = parseHijriDate(dateStr);
+        if (!parsed) {
+          // If it's a number (Excel date), it's likely Gregorian, but for sample template we expect Hijri strings
           errors.push({
             row: rowNum,
             field: t('scheduled_date'),
-            message: t('invalid_date_format')
+            message: t('invalid_date_format') + " (Expected YYYY-MM-DD Hijri)"
           });
         }
       }
@@ -212,13 +216,13 @@ export function ExcelUploadVisits() {
         const date = XLSX.SSF.parse_date_code(Number(dateStr));
         return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
       }
-      
+
       // Handle regular date string
       const date = new Date(dateStr);
       if (!isNaN(date.getTime())) {
         return date.toISOString().split('T')[0];
       }
-      
+
       return dateStr;
     } catch (error) {
       return dateStr;
@@ -294,9 +298,8 @@ export function ExcelUploadVisits() {
       {/* Upload Area */}
       {!file && (
         <Card
-          className={`border-2 border-dashed transition-colors ${
-            isDragging ? 'border-primary bg-primary/5' : 'border-gray-300'
-          }`}
+          className={`border-2 border-dashed transition-colors ${isDragging ? 'border-primary bg-primary/5' : 'border-gray-300'
+            }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}

@@ -101,6 +101,7 @@ export interface Visit {
   hijriDate?: string;
   actualDate?: string;
   status: 'completed' | 'postponed' | 'scheduled' | 'unscheduled' | 'cancelled';
+  progress: number; // 0=open, 1=closed(waiting plan), 2=closed(plan submitted)
   assignedEmployees: string[];
   postponeReason?: string;
   programId?: string;

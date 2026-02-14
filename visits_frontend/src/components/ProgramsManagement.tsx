@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useData } from '../contexts/DataContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { Layers, Plus, Edit2, Trash2, CheckCircle, Clock, FileText, GraduationCap, Upload } from 'lucide-react';
+import { Layers, Plus, Edit2, Trash2, CheckCircle, Clock, FileText, GraduationCap, Upload, X } from 'lucide-react';
 import { programApi } from '../services/api';
 import { toast } from 'sonner@2.0.3';
 import { Program } from '../App';
@@ -234,37 +234,51 @@ export function ProgramsManagement() {
 
       {/* Add/Edit Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-gray-900 mb-4">
-              {editingProgram ? t('edit') : t('add_program')}
-            </h3>
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
+          onClick={resetForm}
+        >
+          <div
+            className="glass-effect rounded-2xl shadow-medium border border-gray-200/50 max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto relative z-50 bg-white/80"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-gray-900 font-bold text-lg">
+                {editingProgram ? t('edit') : t('add_program')}
+              </h3>
+              <button
+                onClick={resetForm}
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-gray-700 mb-2">
+                  <label className="block text-gray-700 mb-2 font-medium text-sm">
                     {t('program_name')} (عربي) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl input-enhanced focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                     placeholder="مثال: مكافحة العدوى"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-gray-700 mb-2">
+                  <label className="block text-gray-700 mb-2 font-medium text-sm">
                     {t('program_name_en')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.nameEn}
                     onChange={(e) => setFormData(prev => ({ ...prev, nameEn: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl input-enhanced focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                     placeholder="e.g., Infection Control Assessment"
                     required
                   />
@@ -273,33 +287,33 @@ export function ProgramsManagement() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-gray-700 mb-2">{t('target_visits')}</label>
+                  <label className="block text-gray-700 mb-2 font-medium text-sm">{t('target_visits')}</label>
                   <input
                     type="number"
                     min="0"
                     value={formData.targetVisits}
                     onChange={(e) => setFormData(prev => ({ ...prev, targetVisits: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl input-enhanced focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-gray-700 mb-2">{t('training_sessions')}</label>
+                  <label className="block text-gray-700 mb-2 font-medium text-sm">{t('training_sessions')}</label>
                   <input
                     type="number"
                     min="0"
                     value={formData.trainingSessions}
                     onChange={(e) => setFormData(prev => ({ ...prev, trainingSessions: parseInt(e.target.value) || 0 }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl input-enhanced focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-gray-700 mb-3">{t('corrective_plans')}</label>
+                <label className="block text-gray-700 mb-3 font-medium text-sm">{t('corrective_plans')}</label>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-600 mb-2">{t('approved_plans')}</label>
+                    <label className="block text-xs text-gray-500 mb-2">{t('approved_plans')}</label>
                     <input
                       type="number"
                       min="0"
@@ -311,12 +325,12 @@ export function ProgramsManagement() {
                           approved: parseInt(e.target.value) || 0
                         }
                       })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl input-enhanced focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-gray-600 mb-2">{t('pending_plans')}</label>
+                    <label className="block text-xs text-gray-500 mb-2">{t('pending_plans')}</label>
                     <input
                       type="number"
                       min="0"
@@ -328,18 +342,18 @@ export function ProgramsManagement() {
                           pending: parseInt(e.target.value) || 0
                         }
                       })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl input-enhanced focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                     />
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-gray-700 mb-2">
+                <label className="block text-gray-700 mb-2 font-medium text-sm">
                   {t('program_icon')}
                 </label>
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden border border-dashed border-gray-300">
+                  <div className="w-16 h-16 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden border border-dashed border-gray-300">
                     {iconFile ? (
                       <img src={URL.createObjectURL(iconFile)} alt="Preview" className="w-full h-full object-cover" />
                     ) : editingProgram?.icon ? (
@@ -352,24 +366,24 @@ export function ProgramsManagement() {
                     type="file"
                     accept="image/*"
                     onChange={(e) => setIconFile(e.target.files?.[0] || null)}
-                    className="flex-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="flex-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 pt-4">
+              <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={resetForm}
                   disabled={isUploading}
-                  className="flex-1 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                  className="flex-1 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors disabled:opacity-50 font-medium"
                 >
                   {t('cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isUploading}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-3 gradient-primary text-white rounded-xl shadow-soft hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 font-medium"
                 >
                   {isUploading ? (
                     <>

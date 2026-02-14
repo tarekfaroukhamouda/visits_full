@@ -209,7 +209,7 @@ const translations: Record<Language, Record<string, string>> = {
     'outside_taif': 'خارج الطائف',
     'location': 'الموقع',
     'all_locations': 'جميع المواقع',
-    
+
     // Programs
     'programs_management': 'إدارة البرامج',
     'programs_subtitle': 'إدارة ومتابعة البرامج والزيارات',
@@ -227,7 +227,7 @@ const translations: Record<Language, Record<string, string>> = {
     'program_added': '✅ تم إضافة البرنامج بنجاح',
     'program_updated': '✅ تم تحديث البرنامج بنجاح',
     'program_deleted': '✅ تم حذف البرنامج بنجاح',
-    
+
     // Facilities
     'facilities_management': 'إدارة المنشآت',
     'facilities_subtitle': 'إدارة وتصنيف المنشآت الصحية',
@@ -236,7 +236,7 @@ const translations: Record<Language, Record<string, string>> = {
     'facility_updated': '✅ تم تحديث المنشأة بنجاح',
     'facility_deleted': '✅ تم حذف المنشأة بنجاح',
     'no_facilities': 'لا توجد منشآت',
-    
+
     // Employee Performance
     'employee_performance': 'تقارير أداء الموظفين',
     'performance_subtitle': 'تحليل أداء الموظفين والإنجازات',
@@ -251,6 +251,8 @@ const translations: Record<Language, Record<string, string>> = {
     'by_location': 'حسب الموقع',
     'task_completion': 'نسبة إنجاز المهام',
     'export_report': 'تصدير التقرير',
+    'waiting_for_plan': 'بانتظار خطة تصحيحية',
+    'plan_submitted': 'تم تقديم الخطة',
 
     // Vacations & Conflicts
     'vacations': 'الإجازات',
@@ -269,7 +271,7 @@ const translations: Record<Language, Record<string, string>> = {
     'employee_on_vacation': '⚠️ الموظف في إجازة خلال هذه الفترة',
     'employee_has_conflict': '⚠️ الموظف لديه زيارة أخرى في نفس التاريخ',
     'employee_unavailable': '⚠️ الموظف غير متاح في هذا التاريخ',
-    
+
     // Swap Requests
     'swap_visit': 'تبديل الزيارة',
     'swap_request': 'طلب تبديل',
@@ -280,7 +282,7 @@ const translations: Record<Language, Record<string, string>> = {
     'swap_rejected': '❌ تم رفض طلب التبديل',
     'pending_swaps': 'طلبات التبديل المعلقة',
     'swap_requests': 'طلبات التبديل',
-    
+
     // Tasks & Corrective Plans
     'tasks': 'المهام',
     'add_task': 'إضافة مهمة',
@@ -297,7 +299,7 @@ const translations: Record<Language, Record<string, string>> = {
     'images': 'الصور والشواهد',
     'approve_plan': 'اعتماد الخطة',
     'review_plan': 'تحت المراجعة',
-    
+
     // Employee History
     'employee_history': 'سجل الموظف',
     'previous_visits': 'الزيارات السابقة',
@@ -306,7 +308,7 @@ const translations: Record<Language, Record<string, string>> = {
     'total_completed': 'إجمالي المنجزة',
     'total_upcoming': 'إجمالي القادمة',
     'reviewed_by': 'تمت المراجعة بواسطة',
-    
+
     // Excel Upload
     'excel_upload_visits': 'استيراد الزيارات من Excel',
     'excel_upload_subtitle': 'رفع ملف Excel لجدولة الزيارات بشكل جماعي',
@@ -334,7 +336,7 @@ const translations: Record<Language, Record<string, string>> = {
     'visits_import_failed': '❌ فشل استيراد بعض الزيارات',
     'template_downloaded': '✅ تم تحميل النموذج بنجاح',
     'excel_upload': 'Excel Upload',
-    
+
     // Calendar View
     'calendar_view_subtitle': 'عرض وإدارة الزيارات في التقويم',
     'today': 'اليوم',
@@ -501,7 +503,7 @@ const translations: Record<Language, Record<string, string>> = {
     'outside_taif': 'Outside Taif',
     'location': 'Location',
     'all_locations': 'All Locations',
-    
+
     // Programs
     'programs_management': 'Programs Management',
     'programs_subtitle': 'Manage and track programs and visits',
@@ -519,7 +521,7 @@ const translations: Record<Language, Record<string, string>> = {
     'program_added': '✅ Program added successfully',
     'program_updated': '✅ Program updated successfully',
     'program_deleted': '✅ Program deleted successfully',
-    
+
     // Facilities
     'facilities_management': 'Facilities Management',
     'facilities_subtitle': 'Manage and categorize health facilities',
@@ -528,7 +530,7 @@ const translations: Record<Language, Record<string, string>> = {
     'facility_updated': '✅ Facility updated successfully',
     'facility_deleted': '✅ Facility deleted successfully',
     'no_facilities': 'No facilities',
-    
+
     // Employee Performance
     'employee_performance': 'Employee Performance Reports',
     'performance_subtitle': 'Analyze employee performance and achievements',
@@ -543,6 +545,8 @@ const translations: Record<Language, Record<string, string>> = {
     'by_location': 'By Location',
     'task_completion': 'Task Completion Rate',
     'export_report': 'Export Report',
+    'waiting_for_plan': 'Waiting for Plan',
+    'plan_submitted': 'Plan Submitted',
 
     // Vacations & Conflicts
     'vacations': 'Vacations',
@@ -561,7 +565,7 @@ const translations: Record<Language, Record<string, string>> = {
     'employee_on_vacation': '⚠️ Employee is on vacation during this period',
     'employee_has_conflict': '⚠️ Employee has another visit on the same date',
     'employee_unavailable': '⚠️ Employee is unavailable on this date',
-    
+
     // Swap Requests
     'swap_visit': 'Swap Visit',
     'swap_request': 'Swap Request',
@@ -572,7 +576,7 @@ const translations: Record<Language, Record<string, string>> = {
     'swap_rejected': '❌ Swap request rejected',
     'pending_swaps': 'Pending Swap Requests',
     'swap_requests': 'Swap Requests',
-    
+
     // Tasks & Corrective Plans
     'tasks': 'Tasks',
     'add_task': 'Add Task',
@@ -589,7 +593,7 @@ const translations: Record<Language, Record<string, string>> = {
     'images': 'Images & Evidence',
     'approve_plan': 'Approve Plan',
     'review_plan': 'Under Review',
-    
+
     // Employee History
     'employee_history': 'Employee History',
     'previous_visits': 'Previous Visits',
@@ -598,7 +602,7 @@ const translations: Record<Language, Record<string, string>> = {
     'total_completed': 'Total Completed',
     'total_upcoming': 'Total Upcoming',
     'reviewed_by': 'Reviewed By',
-    
+
     // Excel Upload
     'excel_upload_visits': 'Import Visits from Excel',
     'excel_upload_subtitle': 'Upload Excel file to schedule visits in bulk',
@@ -626,7 +630,7 @@ const translations: Record<Language, Record<string, string>> = {
     'visits_import_failed': '❌ Failed to import some visits',
     'template_downloaded': '✅ Template downloaded successfully',
     'excel_upload': 'Excel Upload',
-    
+
     // Calendar View
     'calendar_view_subtitle': 'View and manage visits on calendar',
     'today': 'Today',

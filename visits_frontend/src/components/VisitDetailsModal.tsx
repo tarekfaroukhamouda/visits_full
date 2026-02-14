@@ -61,16 +61,24 @@ export function VisitDetailsModal({ visit, onClose, isOpen = true, onEdit, userR
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onClick={onClose}>
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div
+        className="glass-effect rounded-2xl shadow-medium border border-gray-200/50 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative bg-white/80"
+        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-gray-900">تفاصيل الزيارة</h2>
+        <div className="sticky top-0 z-10 gradient-primary px-6 py-4 flex items-center justify-between text-white shadow-soft">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+              <FileText className="w-6 h-6 text-white" />
+            </div>
+            <h2 className="text-xl font-bold drop-shadow">تفاصيل الزيارة</h2>
+          </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-white/10 rounded-xl transition-colors"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5 text-white" />
           </button>
         </div>
 
@@ -282,42 +290,56 @@ export function VisitDetailsModal({ visit, onClose, isOpen = true, onEdit, userR
         </div>
 
         {/* Close Visit Confirmation/Form Overlay */}
+        {/* Close Visit Confirmation/Form Overlay */}
         {isClosing && (
-          <div className="absolute inset-0 bg-white z-10 flex flex-col">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900">{t('close_visit_confirm')}</h3>
-              <button onClick={() => setIsClosing(false)} className="text-gray-500 hover:text-gray-700">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-[60]" onClick={() => setIsClosing(false)}>
+            <div
+              className="glass-effect rounded-2xl shadow-medium border border-gray-200/50 max-w-md w-full p-6 relative z-50 bg-white"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-gray-900 font-bold text-lg">{t('close_visit_confirm')}</h3>
+                <button
+                  onClick={() => setIsClosing(false)}
+                  className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
 
-            <div className="flex-1 p-6 overflow-y-auto">
-              <p className="text-gray-600">{language === 'ar' ? 'هل أنت متأكد من إغلاق هذه الزيارة؟' : 'Are you sure you want to close this visit?'}</p>
-            </div>
+              <div className="mb-6">
+                <p className="text-gray-600 text-lg">
+                  {language === 'ar' ? 'هل أنت متأكد من إغلاق هذه الزيارة؟' : 'Are you sure you want to close this visit?'}
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  {language === 'ar' ? 'سيتم تحويل حالة الزيارة إلى مكتملة وسيطلب منك تقديم خطة تصحيحية.' : 'The visit status will be changed to completed and you will be asked to submit a correction plan.'}
+                </p>
+              </div>
 
-            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-              <button
-                onClick={() => setIsClosing(false)}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                {t('cancel')}
-              </button>
-              <button
-                onClick={async () => {
-                  await handleCloseVisit();
-                  setIsClosing(false);
-                  onClose();
-                }}
-                disabled={isSubmitting}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {isSubmitting ? (
-                  <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <CheckCircle className="w-5 h-5" />
-                )}
-                <span>{language === 'ar' ? 'تأكيد الإغلاق' : 'Confirm Close'}</span>
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsClosing(false)}
+                  className="flex-1 px-4 py-3 text-gray-700 hover:bg-gray-100 rounded-xl transition-colors font-medium"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  onClick={async () => {
+                    await handleCloseVisit();
+                    setIsClosing(false);
+                    onClose();
+                  }}
+                  disabled={isSubmitting}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-green-600 text-white rounded-xl shadow-soft hover:bg-green-700 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-5 h-5" />
+                  )}
+                  <span>{language === 'ar' ? 'تأكيد الإغلاق' : 'Confirm Close'}</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
